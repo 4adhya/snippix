@@ -1,25 +1,18 @@
 import React, { useEffect, useState } from "react";
-import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 export default function SplashScreen() {
   const [animate, setAnimate] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Start animation after 1 sec
-    const animationTimer = setTimeout(() => {
-      setAnimate(true);
-    }, 1000);
-
-    // Redirect after animation finishes (1.6s total)
-    const redirectTimer = setTimeout(() => {
-      navigate("/home");
-    }, 1600);
+    const timer1 = setTimeout(() => setAnimate(true), 1000);
+    const timer2 = setTimeout(() => navigate("/home"), 1600);
 
     return () => {
-      clearTimeout(animationTimer);
-      clearTimeout(redirectTimer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
     };
   }, [navigate]);
 

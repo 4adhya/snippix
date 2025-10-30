@@ -1,40 +1,29 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --sun-light: #FFF8E1;
-  --sun-main: #FFEB3B;
-  --sun-dark: #FBC02D;
-  --ocean-light: #E1F5FE;
-  --ocean-main: #03A9F4;
-  --ocean-dark: #0288D1;
-}
-
-html, body {
+/* Ensure full height for React root */
+html, body, #root {
   height: 100%;
-  background-color: var(--sun-light);
-  color: #1a1a1a;
-  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #000; /* full black */
 }
 
-.full-screen-center {
-  @apply flex items-center justify-center h-screen w-screen;
+/* Remove default Vite typography and colors */
+* {
+  box-sizing: border-box;
+}
+@keyframes fadeZoom {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(4);
+  }
 }
 
-.auth-blur {
-  @apply bg-white/60 backdrop-blur-xl shadow-2xl rounded-2xl p-8;
+.animate-splash {
+  animation: fadeZoom 0.6s ease-out forwards;
+  animation-delay: 1s; /* Wait 1 sec before anim */
 }
-
-.logo-top-right {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
-  width: 60px;
-  height: 60px;
-}
-
-.reveal-mask {
-  @apply fixed inset-0 bg-sunflower-dark z-50;
-}
-
