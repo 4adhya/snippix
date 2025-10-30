@@ -1,14 +1,40 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Ensure full height for React root */
-html, body, #root {
+:root {
+  --sun-light: #FFF8E1;
+  --sun-main: #FFEB3B;
+  --sun-dark: #FBC02D;
+  --ocean-light: #E1F5FE;
+  --ocean-main: #03A9F4;
+  --ocean-dark: #0288D1;
+}
+
+html, body {
   height: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: #000; /* full black */
+  background-color: var(--sun-light);
+  color: #1a1a1a;
+  font-family: 'Inter', sans-serif;
 }
 
-/* Remove default Vite typography and colors */
-* {
-  box-sizing: border-box;
+.full-screen-center {
+  @apply flex items-center justify-center h-screen w-screen;
 }
+
+.auth-blur {
+  @apply bg-white/60 backdrop-blur-xl shadow-2xl rounded-2xl p-8;
+}
+
+.logo-top-right {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+}
+
+.reveal-mask {
+  @apply fixed inset-0 bg-sunflower-dark z-50;
+}
+

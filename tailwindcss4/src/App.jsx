@@ -1,13 +1,43 @@
-import React from "react";
-import "./App.css";
-import logo from "./assets/logo.png";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import AuthCard from "./components/AuthCard.jsx";
+import Home from "./pages/Home.jsx";
 
-function App() {
+export default function App() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [reveal, setReveal] = useState(false);
+
+  const handleAuthSuccess = () => {
+    setReveal(true);
+    setTimeout(() => {
+      setReveal(false);
+      setAuthenticated(true);
+    }, 1500);
+  };
+
   return (
-    <div className="w-full min-h-screen bg-black flex items-center justify-center">
-      <img src={logo} alt="Snippix Logo" className="w-32" />
+    <div className="relative min-h-screen bg-sunflower-light">
+      <img src="/logo.png" alt="Logo" className="logo-top-right" />
+
+      <AnimatePresence>
+        {reveal && (
+          <motion.div
+            className="reveal-mask"
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: 1 }}
+            exit={{ scaleY: 0 }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+          />
+        )}
+      </AnimatePresence>
+
+      {!authenticated ? (
+        <div className="full-screen-center">
+          <AuthCard onAuthSuccess={handleAuthSuccess} />
+        </div>
+      ) : (
+        <Home />
+      )}
     </div>
   );
 }
-
-export default App;
