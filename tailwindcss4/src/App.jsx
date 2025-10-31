@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import AuthCard from "./components/AuthCard.jsx"; // Assuming path
-import Home from "./pages/home.jsx"; // Assuming path
-import SplashScreen from "./pages/splashscreen.jsx"; // **Import the Splash Screen**
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import AuthCard from "./components/AuthCard.jsx";
+import Home from "./pages/home.jsx";
+import ProfileScroll from "./pages/profilescroll.jsx";
+import SplashScreen from "./pages/splashscreen.jsx";
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [reveal, setReveal] = useState(false);
-  // **NEW STATE: Control for the initial Splash Screen duration**
   const [loading, setLoading] = useState(true);
 
-  // Effect to hide the Splash Screen after 1.6 seconds
+  // Splash screen effect
   useEffect(() => {
-    const splashTimer = setTimeout(() => {
-      setLoading(false);
-    }, 1600); // **Matches the 1.6 second total duration from SplashScreen.jsx**
-
+    const splashTimer = setTimeout(() => setLoading(false), 1600);
     return () => clearTimeout(splashTimer);
   }, []);
 
@@ -27,38 +26,41 @@ export default function App() {
     }, 1500);
   };
 
-  // --- Conditional Rendering ---
-  
-  if (loading) {
-    // 1. Show Splash Screen while loading is true
-    return <SplashScreen />;
-  }
-
   return (
-    <div className="relative min-h-screen bg-sunflower-light">
-      <img src="/logo.png" alt="Logo" className="logo-top-right" />
+    <BrowserRouter>
+      <div className="relative min-h-screen bg-black">
+        {/* Splash Screen */}
+        {loading && <SplashScreen />}
 
-      <AnimatePresence>
-        {reveal && (
-          <motion.div
-            className="reveal-mask"
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: 1 }}
-            exit={{ scaleY: 0 }}
-            transition={{ duration: 1, ease: "easeInOut" }}
-          />
+        {/* Animated transition overlay */}
+        <AnimatePresence>
+          {reveal && (
+            <motion.div
+              className="fixed inset-0 bg-white z-50 origin-bottom"
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              exit={{ scaleY: 0 }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* After splash */}
+        {!loading && (
+          <>
+            {!authenticated ? (
+              <div className="flex items-center justify-center min-h-screen">
+                <AuthCard onAuthSuccess={handleAuthSuccess} />
+              </div>
+            ) : (
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/profiles" element={<ProfileScroll />} />
+              </Routes>
+            )}
+          </>
         )}
-      </AnimatePresence>
-
-      {/* 2. After Splash, show AuthCard until authenticated */}
-      {!authenticated ? (
-        <div className="full-screen-center">
-          <AuthCard onAuthSuccess={handleAuthSuccess} />
-        </div>
-      ) : (
-        // 3. After authentication, show Home
-        <Home />
-      )}
-    </div>
+      </div>
+    </BrowserRouter>
   );
 }

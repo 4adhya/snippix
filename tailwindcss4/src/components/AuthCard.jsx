@@ -10,7 +10,7 @@ export default function AuthCard({ onAuthSuccess }) {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#fff9e6]">
+    <div className="relative flex items-center justify-center min-h-screen bg-transparent">
       <div className="relative w-[800px] h-[480px] rounded-2xl shadow-2xl overflow-hidden flex bg-white">
 
         {/* Sliding Black Panel */}
