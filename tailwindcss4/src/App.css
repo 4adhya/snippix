@@ -1,42 +1,113 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ===== Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  background: black;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  cursor: none; /* Hide the default cursor */
+}
+
+/* ===== Canvas for Trail ===== */
+.trail-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ===== Root Layout ===== */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  background-color: black;
+}
+
+/* ===== Utility ===== */
+.relative {
+  position: relative;
+  z-index: 2;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+/* ===== Auth / Logo Styling ===== */
 .logo {
   height: 6em;
-  padding: 0em;
-  will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #ffe3a1aa);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
+/* ===== Card ===== */
 .card {
   padding: 2em;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 20px rgba(255, 200, 100, 0.1);
+  backdrop-filter: blur(8px);
 }
 
-.read-the-docs {
-  color: #888;
+/* ===== Transition Overlay ===== */
+.motion-div {
+  background: white;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  transform-origin: bottom;
+}
+/* ==== Cursor Line Canvas ==== */
+.cursor-line-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999; /* stays above all content */
+  pointer-events: none;
+}
+
+body, html {
+  cursor: none; /* hide system cursor */
+}
+/* ==== Glowing Cursor Line ==== */
+.cursor-line-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+html, body {
+  cursor: none; /* hide system cursor */
 }
