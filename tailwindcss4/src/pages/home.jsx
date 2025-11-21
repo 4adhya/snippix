@@ -10,6 +10,7 @@ function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
+          
           {/* Left side */}
           <div className="flex items-center gap-6">
             <img
@@ -66,26 +67,27 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="pt-32 flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-5xl font-bold mb-4">Welcome to Snippix 🌻</h1>
+        <h1 className="text-5xl font-bold mb-4">Welcome to Snippix</h1>
+
         <p className="text-gray-400 max-w-lg mb-12">
-          Your creative space to share ideas, code, and inspiration.  
+          Your creative space to share ideas, code, and inspiration.
           Customize your vibe, connect with others, and make something beautiful.
         </p>
 
         {/* Grid Cards */}
         <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
           {[
-            { emoji: "✨", label: "Explore", onClick: handleExplore },
-            { emoji: "💬", label: "Chat" },
-            { emoji: "🖼️", label: "Gallery" },
-            { emoji: "⚙️", label: "Settings" },
+            { label: "Explore", onClick: handleExplore },
+            { label: "Chat" },
+            { label: "Gallery" },
+            { label: "Settings" },
           ].map((card, index) => (
             <div
               key={index}
               onClick={card.onClick}
               className="p-8 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all cursor-pointer active:scale-95"
             >
-              <span className="text-4xl mb-2 block">{card.emoji}</span>
+              <span className="text-4xl mb-2 block"></span>
               <span className="font-medium">{card.label}</span>
             </div>
           ))}
