@@ -12,18 +12,7 @@ html, body {
   color: white;
   font-family: 'Poppins', sans-serif;
   overflow: hidden;
-  cursor: none; /* Hide the default cursor */
-}
-
-/* ===== Canvas for Trail ===== */
-.trail-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
+  cursor: default; /* NORMAL CURSOR */
 }
 
 /* ===== Root Layout ===== */
@@ -83,31 +72,4 @@ html, body {
   z-index: 50;
   transform-origin: bottom;
 }
-/* ==== Cursor Line Canvas ==== */
-.cursor-line-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999; /* stays above all content */
-  pointer-events: none;
-}
 
-body, html {
-  cursor: none; /* hide system cursor */
-}
-/* ==== Glowing Cursor Line ==== */
-.cursor-line-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-  pointer-events: none;
-}
-
-html, body {
-  cursor: none; /* hide system cursor */
-}
