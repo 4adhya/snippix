@@ -6,6 +6,7 @@ import AuthCard from "./components/AuthCard.jsx";
 import Home from "./pages/home.jsx";
 import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
+import Settings from "./pages/settings.jsx";
 import "./App.css";
 
 export default function App() {
@@ -13,10 +14,10 @@ export default function App() {
   const [reveal, setReveal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Splash screen effect
+  // Splash screen loader
   useEffect(() => {
-    const splashTimer = setTimeout(() => setLoading(false), 1600);
-    return () => clearTimeout(splashTimer);
+    const timer = setTimeout(() => setLoading(false), 1600);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleAuthSuccess = () => {
@@ -55,10 +56,14 @@ export default function App() {
                 <AuthCard onAuthSuccess={handleAuthSuccess} />
               </div>
             ) : (
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/profiles" element={<ProfileScroll />} />
-              </Routes>
+              <div className="relative z-10 h-screen overflow-y-auto">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/profiles" element={<ProfileScroll />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+                
+              </div>
             )}
           </>
         )}
@@ -66,6 +71,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-
-
