@@ -1,13 +1,45 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { registerUser, loginUser, db } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
+
 
 export default function AuthCard({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onAuthSuccess();
-  };
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    if (isSignUp) {
+      // SIGN UP FLOW
+      const userCred = await registerUser(username, password);
+      const user = userCred.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        fullName: fullName,
+        username: username,
+        createdAt: Date.now(),
+      });
+
+      console.log("User signed up:", user.uid);
+    } else {
+      // LOGIN FLOW
+      const userCred = await loginUser(username, password);
+      console.log("User logged in:", userCred.user.uid);
+    }
+
+    onAuthSuccess(); // Go forward after success
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
+
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-transparent">
@@ -59,13 +91,19 @@ export default function AuthCard({ onAuthSuccess }) {
                   <input
                     type="text"
                     placeholder="Username"
-                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+
                   <input
                     type="password"
                     placeholder="Password"
-                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+
                   <button
                     type="submit"
                     className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-xl transition"
@@ -101,21 +139,30 @@ export default function AuthCard({ onAuthSuccess }) {
                   Create Account
                 </h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+
                   <input
                     type="text"
                     placeholder="Username"
-                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
+
                   <input
                     type="password"
                     placeholder="Password"
-                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
+
                   <button
                     type="submit"
                     className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 rounded-xl transition"
