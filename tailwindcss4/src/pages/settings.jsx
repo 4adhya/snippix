@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { User, Bell, Lock, Palette, HelpCircle, Shield, FileText, LogOut, Trash2, ChevronRight, Moon, Sun, Monitor } from "lucide-react";
+import ReportProblemModal from "../components/reportproblem.jsx";
+
 
 export default function Settings() {
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [privateAccount, setPrivateAccount] = useState(false);
   const [theme, setTheme] = useState("dark");
+  const [showReportModal, setShowReportModal] = useState(false);
+
 
   const handleLogout = () => {
     alert("Logging out...");
@@ -215,7 +219,8 @@ export default function Settings() {
             icon={FileText}
             title="Report a Problem"
             subtitle="Let us know if something isn't working"
-            onClick={() => alert("Report a Problem")}
+            onClick={() => setShowReportModal(true)}
+
           />
         </div>
       </div>
@@ -266,6 +271,10 @@ export default function Settings() {
       <div className="text-center text-gray-500 text-sm pb-6">
         <p>Version 1.0.0</p>
       </div>
+      {showReportModal && (
+  <ReportProblemModal onClose={() => setShowReportModal(false)} />
+)}
+
     </div>
   );
 }

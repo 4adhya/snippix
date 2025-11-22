@@ -48,10 +48,10 @@ export default function Home() {
         {/* Grid Cards */}
         <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
           {[
-            { emoji: "✨", label: "Explore", onClick: handleExplore },
-            { emoji: "💬", label: "Chat" },
-            { emoji: "🖼️", label: "Gallery" },
-            { emoji: "⚙️", label: "Settings", onClick: handleSettings },
+            { label: "Explore", onClick: handleExplore },
+            { label: "Create your first Snippix!" },
+            { label: "Setup your Profile" },
+            { label: "Settings", onClick: handleSettings },
           ].map((card, index) => (
             <div
               key={index}
