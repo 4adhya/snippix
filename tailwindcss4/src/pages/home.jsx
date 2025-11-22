@@ -14,7 +14,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-transparent text-white">
+
 
       {/* TOP NAVBAR */}
       <div className="flex justify-between items-center px-6 py-4 border-b border-white/10">

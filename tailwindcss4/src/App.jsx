@@ -7,6 +7,7 @@ import Home from "./pages/home.jsx";
 import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
+import BackgroundWave from "./components/BackgroundWave.jsx"; // LED-style animated background
 import "./App.css";
 
 export default function App() {
@@ -14,7 +15,6 @@ export default function App() {
   const [reveal, setReveal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Splash screen loader
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1600);
     return () => clearTimeout(timer);
@@ -32,6 +32,9 @@ export default function App() {
     <BrowserRouter>
       <div className="relative min-h-screen bg-black overflow-hidden">
 
+        {/* Background always visible */}
+        <BackgroundWave />
+
         {/* Splash Screen */}
         {loading && <SplashScreen />}
 
@@ -39,7 +42,7 @@ export default function App() {
         <AnimatePresence>
           {reveal && (
             <motion.div
-              className="motion-div"
+              className="absolute inset-0 bg-white origin-top"
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               exit={{ scaleY: 0 }}
@@ -48,25 +51,22 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* Main Content */}
-        {!loading && (
-          <>
-            {!authenticated ? (
-              <div className="flex items-center justify-center min-h-screen">
-                <AuthCard onAuthSuccess={handleAuthSuccess} />
-              </div>
-            ) : (
-              <div className="relative z-10 h-screen overflow-y-auto">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/profiles" element={<ProfileScroll />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Routes>
-                
-              </div>
-            )}
-          </>
-        )}
+        {/* Main content */}
+        <div className="relative z-10 min-h-screen">
+          {!loading && !authenticated && (
+            <div className="flex items-center justify-center min-h-screen">
+              <AuthCard onAuthSuccess={handleAuthSuccess} />
+            </div>
+          )}
+
+          {!loading && authenticated && (
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/profiles" element={<ProfileScroll />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          )}
+        </div>
       </div>
     </BrowserRouter>
   );
