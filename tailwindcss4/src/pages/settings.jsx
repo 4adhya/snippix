@@ -1,7 +1,22 @@
-import React, { useState } from "react";
-import { User, Bell, Lock, Palette, HelpCircle, Shield, FileText, LogOut, Trash2, ChevronRight, Moon, Sun, Monitor } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  User,
+  Bell,
+  Lock,
+  Palette,
+  HelpCircle,
+  Shield,
+  FileText,
+  LogOut,
+  Trash2,
+  ChevronRight,
+  Moon,
+  Sun,
+  Monitor,
+} from "lucide-react";
 import ReportProblemModal from "../components/reportproblem.jsx";
 
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export default function Settings() {
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -10,11 +25,23 @@ export default function Settings() {
   const [theme, setTheme] = useState("dark");
   const [showReportModal, setShowReportModal] = useState(false);
 
+  // Firebase user state
+  const [firebaseUser, setFirebaseUser] = useState(null);
+
+  // Load Firebase user on page load
+  useEffect(() => {
+    const auth = getAuth();
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
+      setFirebaseUser(currentUser);
+    });
+    return () => unsub();
+  }, []);
 
   const handleLogout = () => {
     alert("Logging out...");
   };
 
+  // Reusable Toggle Component
   const ToggleSwitch = ({ checked, onChange }) => (
     <button
       onClick={() => onChange(!checked)}
@@ -30,6 +57,7 @@ export default function Settings() {
     </button>
   );
 
+  // Reusable Setting Item
   const SettingItem = ({ icon: Icon, title, subtitle, onClick, showArrow = true }) => (
     <button
       onClick={onClick}
@@ -48,6 +76,7 @@ export default function Settings() {
     </button>
   );
 
+  // Toggle Item Row
   const ToggleItem = ({ icon: Icon, title, subtitle, checked, onChange }) => (
     <div className="w-full flex items-center justify-between p-4 bg-neutral-900 rounded-xl">
       <div className="flex items-center gap-4">
@@ -63,6 +92,7 @@ export default function Settings() {
     </div>
   );
 
+  // Theme Selector Section
   const ThemeSelector = () => (
     <div className="w-full p-4 bg-neutral-900 rounded-xl">
       <div className="flex items-center gap-4 mb-4">
@@ -84,6 +114,7 @@ export default function Settings() {
           <Sun size={20} />
           <span className="text-xs">Light</span>
         </button>
+
         <button
           onClick={() => setTheme("dark")}
           className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
@@ -93,6 +124,7 @@ export default function Settings() {
           <Moon size={20} />
           <span className="text-xs">Dark</span>
         </button>
+
         <button
           onClick={() => setTheme("system")}
           className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
@@ -118,11 +150,15 @@ export default function Settings() {
       <div className="mb-8 p-6 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl border border-neutral-800">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold">
-            U
+            {firebaseUser?.displayName?.charAt(0) || "U"}
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-semibold">Username</h3>
-            <p className="text-gray-400 text-sm">user@example.com</p>
+            <h3 className="text-xl font-semibold">
+              {firebaseUser?.displayName || "User"}
+            </h3>
+            <p className="text-gray-400 text-sm">
+              {firebaseUser?.email || "user@example.com"}
+            </p>
           </div>
           <button
             onClick={() => alert("Edit Profile clicked")}
@@ -137,18 +173,8 @@ export default function Settings() {
       <div className="mb-6">
         <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Account</h2>
         <div className="space-y-3">
-          <SettingItem
-            icon={User}
-            title="Edit Profile"
-            subtitle="Update your photo, bio, and details"
-            onClick={() => alert("Edit Profile")}
-          />
-          <SettingItem
-            icon={Lock}
-            title="Change Password"
-            subtitle="Update your password regularly"
-            onClick={() => alert("Change Password")}
-          />
+          <SettingItem icon={User} title="Edit Profile" subtitle="Update your photo, bio, and details" onClick={() => alert("Edit Profile")} />
+          <SettingItem icon={Lock} title="Change Password" subtitle="Update your password regularly" onClick={() => alert("Change Password")} />
         </div>
       </div>
 
@@ -173,13 +199,13 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* APPEARANCE SECTION */}
+      {/* APPEARANCE */}
       <div className="mb-6">
         <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Appearance</h2>
         <ThemeSelector />
       </div>
 
-      {/* PRIVACY & SECURITY SECTION */}
+      {/* SECURITY */}
       <div className="mb-6">
         <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Privacy & Security</h2>
         <div className="space-y-3">
@@ -190,61 +216,30 @@ export default function Settings() {
             checked={privateAccount}
             onChange={setPrivateAccount}
           />
-          <SettingItem
-            icon={Lock}
-            title="Blocked Accounts"
-            subtitle="Manage blocked users"
-            onClick={() => alert("Blocked Accounts")}
-          />
-          <SettingItem
-            icon={Shield}
-            title="Two-Step Verification"
-            subtitle="Add extra security to your account"
-            onClick={() => alert("Two-Step Verification")}
-          />
+          <SettingItem icon={Lock} title="Blocked Accounts" subtitle="Manage blocked users" onClick={() => alert("Blocked Accounts")} />
+          <SettingItem icon={Shield} title="Two-Step Verification" subtitle="Add extra security to your account" onClick={() => alert("Two-Step Verification")} />
         </div>
       </div>
 
-      {/* HELP & SUPPORT SECTION */}
+      {/* HELP */}
       <div className="mb-6">
         <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Help & Support</h2>
         <div className="space-y-3">
-          <SettingItem
-            icon={HelpCircle}
-            title="Help Center"
-            subtitle="Get help and support"
-            onClick={() => alert("Help Center")}
-          />
-          <SettingItem
-            icon={FileText}
-            title="Report a Problem"
-            subtitle="Let us know if something isn't working"
-            onClick={() => setShowReportModal(true)}
-
-          />
+          <SettingItem icon={HelpCircle} title="Help Center" subtitle="Get help and support" onClick={() => alert("Help Center")} />
+          <SettingItem icon={FileText} title="Report a Problem" subtitle="Let us know if something isn't working" onClick={() => setShowReportModal(true)} />
         </div>
       </div>
 
-      {/* LEGAL SECTION */}
+      {/* LEGAL */}
       <div className="mb-8">
         <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Legal</h2>
         <div className="space-y-3">
-          <SettingItem
-            icon={FileText}
-            title="Terms & Conditions"
-            subtitle="Review our terms of service"
-            onClick={() => alert("Terms & Conditions")}
-          />
-          <SettingItem
-            icon={FileText}
-            title="Privacy Policy"
-            subtitle="Learn how we protect your data"
-            onClick={() => alert("Privacy Policy")}
-          />
+          <SettingItem icon={FileText} title="Terms & Conditions" subtitle="Review our terms of service" onClick={() => alert("Terms & Conditions")} />
+          <SettingItem icon={FileText} title="Privacy Policy" subtitle="Learn how we protect your data" onClick={() => alert("Privacy Policy")} />
         </div>
       </div>
 
-      {/* DANGER ZONE */}
+      {/* LOGOUT + DELETE */}
       <div className="mb-8 space-y-3">
         <button
           onClick={handleLogout}
@@ -254,7 +249,7 @@ export default function Settings() {
           Log Out
         </button>
 
-        <button 
+        <button
           onClick={() => {
             if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
               alert("Account deletion initiated");
@@ -271,10 +266,8 @@ export default function Settings() {
       <div className="text-center text-gray-500 text-sm pb-6">
         <p>Version 1.0.0</p>
       </div>
-      {showReportModal && (
-  <ReportProblemModal onClose={() => setShowReportModal(false)} />
-)}
 
+      {showReportModal && <ReportProblemModal onClose={() => setShowReportModal(false)} />}
     </div>
   );
 }
