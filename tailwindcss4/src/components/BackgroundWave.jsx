@@ -7,17 +7,15 @@ export default function BackgroundWave() {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    let width = canvas.width = window.innerWidth;
-    let height = canvas.height = window.innerHeight;
-
-    function resize() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = Math.max(window.innerHeight, document.documentElement.scrollHeight);
     }
 
-    window.addEventListener("resize", resize);
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
-    // --------- ORGANIC NOISE FUNCTION (3-layer wave blend) ---------
+    // --------- ORGANIC NOISE FUNCTION ---------
     function noise(x, y, t) {
       return (
         Math.sin(x * 0.13 + t * 0.006) * 0.5 +
@@ -27,13 +25,17 @@ export default function BackgroundWave() {
     }
 
     let t = 0;
+    let animationId;
 
     function draw() {
+      const width = canvas.width;
+      const height = canvas.height;
+
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, width, height);
 
       const cols = 200;
-      const rows = 200;
+      const rows = Math.floor(height / (window.innerHeight / 300)); // Scale rows based on height
       const spacingX = width / cols;
       const spacingY = height / rows;
 
@@ -55,8 +57,9 @@ export default function BackgroundWave() {
           const green = Math.floor(blue * 0.82);
           const red = Math.floor(blue * 0.38);
 
-          const warp = Math.sin(i * 0.14 + t * 0.01) * 3 +
-                       Math.cos(j * 0.14 + t * 0.009) * 3;
+          const warp =
+            Math.sin(i * 0.14 + t * 0.01) * 3 +
+            Math.cos(j * 0.14 + t * 0.009) * 3;
 
           ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
           ctx.beginPath();
@@ -66,22 +69,27 @@ export default function BackgroundWave() {
       }
 
       t += 1;
-      requestAnimationFrame(draw);
+      animationId = requestAnimationFrame(draw);
     }
 
     draw();
 
+    // Resize canvas when content changes
+    const resizeObserver = new ResizeObserver(resizeCanvas);
+    resizeObserver.observe(document.body);
+
     return () => {
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", resizeCanvas);
+      resizeObserver.disconnect();
+      cancelAnimationFrame(animationId);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full -z-10"
+      className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none"
+      style={{ minHeight: "100vh" }}
     />
   );
 }
-
-

@@ -7,7 +7,7 @@ import Home from "./pages/home.jsx";
 import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
-import BackgroundWave from "./components/BackgroundWave.jsx"; // LED-style animated background
+import BackgroundWave from "./components/BackgroundWave.jsx";
 import "./App.css";
 
 export default function App() {
@@ -30,9 +30,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="relative min-h-screen bg-black overflow-hidden">
-
-        {/* Background always visible */}
+      <div className="relative min-h-screen bg-black">
+        {/* Fixed Background */}
         <BackgroundWave />
 
         {/* Splash Screen */}
@@ -42,7 +41,7 @@ export default function App() {
         <AnimatePresence>
           {reveal && (
             <motion.div
-              className="absolute inset-0 bg-white origin-top"
+              className="fixed inset-0 bg-white origin-top z-50"
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               exit={{ scaleY: 0 }}
@@ -51,8 +50,8 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* Main content */}
-        <div className="relative z-10 min-h-screen">
+        {/* Main content - removed relative and z-10 that were blocking scroll */}
+        <div className="min-h-screen">
           {!loading && !authenticated && (
             <div className="flex items-center justify-center min-h-screen">
               <AuthCard onAuthSuccess={handleAuthSuccess} />
