@@ -7,12 +7,14 @@
 
 html, body {
   width: 100%;
-  height: 100%;
+  height: auto; /* Changed from 100% */
+  min-height: 100vh; /* Added */
   background: black;
   color: white;
   font-family: 'Poppins', sans-serif;
-  overflow: hidden;
-  cursor: default; /* NORMAL CURSOR */
+  overflow-x: hidden; /* Only hide horizontal scroll */
+  overflow-y: auto; /* Allow vertical scroll */
+  cursor: default;
 }
 
 /* ===== Root Layout ===== */
@@ -72,4 +74,3 @@ html, body {
   z-index: 50;
   transform-origin: bottom;
 }
-
