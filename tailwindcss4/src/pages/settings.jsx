@@ -24,6 +24,8 @@ export default function Settings() {
   const [privateAccount, setPrivateAccount] = useState(false);
   const [theme, setTheme] = useState("dark");
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   // Firebase user state
   const [firebaseUser, setFirebaseUser] = useState(null);
@@ -234,8 +236,20 @@ export default function Settings() {
       <div className="mb-8">
         <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Legal</h2>
         <div className="space-y-3">
-          <SettingItem icon={FileText} title="Terms & Conditions" subtitle="Review our terms of service" onClick={() => alert("Terms & Conditions")} />
-          <SettingItem icon={FileText} title="Privacy Policy" subtitle="Learn how we protect your data" onClick={() => alert("Privacy Policy")} />
+            <SettingItem
+            icon={FileText}
+            title="Terms & Conditions"
+            subtitle="Review our terms of service"
+            onClick={() => setShowTerms(true)}
+            />
+
+          <SettingItem
+           icon={FileText}
+           title="Privacy Policy"
+           subtitle="Learn how we protect your data"
+           onClick={() => setShowPrivacy(true)}
+          />
+
         </div>
       </div>
 
