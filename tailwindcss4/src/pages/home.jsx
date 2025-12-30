@@ -12,6 +12,10 @@ export default function Home() {
   const handleSettings = () => {
     navigate("/settings");
   };
+    const handleCreateSnippix = () => {
+    navigate("/collage");
+  };
+
 
   return (
     <div className="min-h-screen bg-transparent text-white">
@@ -50,7 +54,7 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
           {[
             { label: "Explore", onClick: handleExplore },
-            { label: "Create your first Snippix!" },
+            { label: "Create your first Snippix!", onClick: handleCreateSnippix },
             { label: "Setup your Profile" },
             { label: "Settings", onClick: handleSettings },
           ].map((card, index) => (
