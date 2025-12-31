@@ -1,28 +1,31 @@
 import React, { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import AuthCard from "./components/AuthCard.jsx";
 import Home from "./pages/home.jsx";
 import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
-import "./App.css";
 import CollageMaker from "./pages/collage";
 import SetupProfile from "./pages/SetupProfile";
 import DMChat from "./pages/DMChat";
 import Chat from "./pages/Chat";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
-
-
+import "./App.css";
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
-  const [reveal, setReveal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [reveal, setReveal] = useState(false);
 
+  // Splash screen logic
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1600);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1800);
     return () => clearTimeout(timer);
   }, []);
 
@@ -31,52 +34,67 @@ export default function App() {
     setTimeout(() => {
       setReveal(false);
       setAuthenticated(true);
-    }, 1500);
+    }, 1200);
   };
+
+  // 🔹 SHOW SPLASH FIRST
+  if (loading) {
+    return <SplashScreen />;
+  }
 
   return (
     <BrowserRouter>
-      <div className="relative min-h-screen bg-black">
-        {/* Fixed Background */}
-        
-        {/* Splash Screen */}
-        {loading && <SplashScreen />}
+      <div className="min-h-screen bg-black">
 
-        {/* Transition animation */}
+        {/* Reveal animation */}
         <AnimatePresence>
           {reveal && (
             <motion.div
-              className="fixed inset-0 bg-white origin-top z-50"
+              className="fixed inset-0 bg-white z-50"
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               exit={{ scaleY: 0 }}
-              transition={{ duration: 1, ease: "easeInOut" }}
+              transition={{ duration: 0.9 }}
             />
           )}
         </AnimatePresence>
 
-        {/* Main content - removed relative and z-10 that were blocking scroll */}
-        <div className="min-h-screen">
-          {!loading && !authenticated && (
-            <div className="flex items-center justify-center min-h-screen">
-              <AuthCard onAuthSuccess={handleAuthSuccess} />
-            </div>
+        <Routes>
+
+          {/* PUBLIC ROUTES */}
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+
+          {/* AUTH ROUTE */}
+          {!authenticated && (
+            <Route
+              path="*"
+              element={
+                <div className="flex items-center justify-center min-h-screen">
+                  <AuthCard onAuthSuccess={handleAuthSuccess} />
+                </div>
+              }
+            />
           )}
 
-          {!loading && authenticated && (
-            <Routes>
+          {/* PROTECTED ROUTES */}
+          {authenticated && (
+            <>
               <Route path="/" element={<Home />} />
               <Route path="/setup-profile" element={<SetupProfile />} />
               <Route path="/profiles" element={<ProfileScroll />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/collage" element={<CollageMaker />} />
               <Route path="/chat" element={<Chat />} />
-              <Route path="/dm/:uid" element={<DMChat />} />
               <Route path="/chat/:uid" element={<DMChat />} />
-            </Routes>
+            </>
           )}
-        </div>
+
+          {/* FALLBACK */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </div>
     </BrowserRouter>
   );
 }
+
