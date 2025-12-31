@@ -7,7 +7,6 @@ import Home from "./pages/home.jsx";
 import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
-import BackgroundWave from "./components/BackgroundWave.jsx";
 import "./App.css";
 import CollageMaker from "./pages/collage";
 
@@ -33,8 +32,7 @@ export default function App() {
     <BrowserRouter>
       <div className="relative min-h-screen bg-black">
         {/* Fixed Background */}
-        <BackgroundWave />
-
+        
         {/* Splash Screen */}
         {loading && <SplashScreen />}
 
