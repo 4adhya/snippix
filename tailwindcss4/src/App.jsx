@@ -21,11 +21,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [reveal, setReveal] = useState(false);
 
-  // Splash screen logic
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1800);
+    const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -37,16 +34,13 @@ export default function App() {
     }, 1200);
   };
 
-  // 🔹 SHOW SPLASH FIRST
-  if (loading) {
-    return <SplashScreen />;
-  }
+  if (loading) return <SplashScreen />;
 
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-black">
 
-        {/* Reveal animation */}
+        {/* Splash transition */}
         <AnimatePresence>
           {reveal && (
             <motion.div
@@ -54,7 +48,7 @@ export default function App() {
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               exit={{ scaleY: 0 }}
-              transition={{ duration: 0.9 }}
+              transition={{ duration: 0.8 }}
             />
           )}
         </AnimatePresence>
@@ -69,11 +63,7 @@ export default function App() {
           {!authenticated && (
             <Route
               path="*"
-              element={
-                <div className="flex items-center justify-center min-h-screen">
-                  <AuthCard onAuthSuccess={handleAuthSuccess} />
-                </div>
-              }
+              element={<AuthCard onAuthSuccess={handleAuthSuccess} />}
             />
           )}
 
@@ -89,9 +79,6 @@ export default function App() {
               <Route path="/chat/:uid" element={<DMChat />} />
             </>
           )}
-
-          {/* FALLBACK */}
-          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </BrowserRouter>

@@ -13,13 +13,11 @@ import {
   Monitor,
   HelpCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   getAuth,
   signOut,
   deleteUser,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
 } from "firebase/auth";
 import { getDoc, doc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase";
@@ -50,13 +48,12 @@ export default function Settings() {
     navigate("/login");
   };
 
-  // ✅ DELETE ACCOUNT FUNCTION
   const handleDeleteAccount = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
     const confirmDelete = window.confirm(
-      "⚠️ Are you sure you want to permanently delete your account? This action cannot be undone."
+      "Are you sure you want to permanently delete your account?"
     );
 
     if (!confirmDelete) return;
@@ -64,16 +61,10 @@ export default function Settings() {
     try {
       await deleteDoc(doc(db, "users", user.uid));
       await deleteUser(user);
-      alert("Your account has been deleted.");
       navigate("/login");
     } catch (error) {
-      if (error.code === "auth/requires-recent-login") {
-        alert("Please login again to delete your account.");
-        navigate("/login");
-      } else {
-        console.error(error);
-        alert("Something went wrong. Try again.");
-      }
+      alert("Please login again to delete your account.");
+      navigate("/login");
     }
   };
 
@@ -131,33 +122,14 @@ export default function Settings() {
 
       {/* ACCOUNT */}
       <Section title="Account">
-        <SettingItem
-          icon={User}
-          title="Edit Profile"
-          subtitle="Update your photo and info"
-          onClick={() => navigate("/edit-profile")}
-        />
-        <SettingItem
-          icon={Lock}
-          title="Change Password"
-          subtitle="Update your password"
-          onClick={() => navigate("/change-password")}
-        />
+        <SettingItem icon={User} title="Edit Profile" subtitle="Update your info" onClick={() => navigate("/edit-profile")} />
+        <SettingItem icon={Lock} title="Change Password" subtitle="Update password" onClick={() => navigate("/change-password")} />
       </Section>
 
       {/* NOTIFICATIONS */}
       <Section title="Notifications">
         <ToggleItem icon={Bell} title="Push Notifications" value={pushNotifications} onChange={() => setPushNotifications(!pushNotifications)} />
         <ToggleItem icon={Bell} title="Email Notifications" value={emailNotifications} onChange={() => setEmailNotifications(!emailNotifications)} />
-      </Section>
-
-      {/* APPEARANCE */}
-      <Section title="Appearance">
-        <div className="grid grid-cols-3 gap-3">
-          <ThemeButton icon={Sun} label="Light" active={theme === "light"} onClick={() => setTheme("light")} />
-          <ThemeButton icon={Moon} label="Dark" active={theme === "dark"} onClick={() => setTheme("dark")} />
-          <ThemeButton icon={Monitor} label="System" active={theme === "system"} onClick={() => setTheme("system")} />
-        </div>
       </Section>
 
       {/* PRIVACY */}
@@ -167,17 +139,22 @@ export default function Settings() {
 
       {/* HELP */}
       <Section title="Help & Support">
-        <SettingItem icon={HelpCircle} title="Help Center" subtitle="Get help and support" />
-        <SettingItem icon={FileText} title="Report a Problem" subtitle="Let us know if something isn't working" onClick={() => setShowReportModal(true)} />
+        <SettingItem icon={HelpCircle} title="Help Center" subtitle="Get help" />
+        <SettingItem icon={FileText} title="Report a Problem" subtitle="Tell us what's wrong" onClick={() => setShowReportModal(true)} />
       </Section>
 
       {/* LEGAL */}
       <Section title="Legal">
-        <SettingItem icon={FileText} title="Terms & Conditions" subtitle="Review our terms" />
-        <SettingItem icon={FileText} title="Privacy Policy" subtitle="How we protect your data" />
+        <Link to="/terms">
+          <SettingItem icon={FileText} title="Terms & Conditions" subtitle="Review our terms" />
+        </Link>
+
+        <Link to="/privacy">
+          <SettingItem icon={FileText} title="Privacy Policy" subtitle="How we protect your data" />
+        </Link>
       </Section>
 
-      {/* LOGOUT + DELETE */}
+      {/* LOGOUT */}
       <div className="mt-6 space-y-3">
         <button
           onClick={handleLogout}
@@ -199,7 +176,7 @@ export default function Settings() {
   );
 }
 
-/* ---------------- HELPERS ---------------- */
+/* HELPERS */
 
 const Section = ({ title, children }) => (
   <div className="mb-6">
@@ -231,16 +208,4 @@ const ToggleItem = ({ icon: Icon, title, value, onChange }) => (
       />
     </button>
   </div>
-);
-
-const ThemeButton = ({ icon: Icon, label, active, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`flex flex-col items-center gap-2 p-4 rounded-xl ${
-      active ? "bg-blue-600" : "bg-neutral-900"
-    }`}
-  >
-    <Icon />
-    <span>{label}</span>
-  </button>
 );
