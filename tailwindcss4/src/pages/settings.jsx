@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   User,
   Bell,
@@ -14,274 +14,237 @@ import {
   Sun,
   Monitor,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getAuth, signOut } from "firebase/auth";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "../firebase";
 import ReportProblemModal from "../components/reportproblem.jsx";
 
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-
 export default function Settings() {
+  const navigate = useNavigate();
+  const auth = getAuth();
+
+  const [profile, setProfile] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [theme, setTheme] = useState("dark");
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [privateAccount, setPrivateAccount] = useState(false);
-  const [theme, setTheme] = useState("dark");
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
 
-  // Firebase user state
-  const [firebaseUser, setFirebaseUser] = useState(null);
-
-  // Load Firebase user on page load
   useEffect(() => {
-    const auth = getAuth();
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setFirebaseUser(currentUser);
-    });
-    return () => unsub();
+    const fetchUser = async () => {
+      if (!auth.currentUser) return;
+      const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (snap.exists()) setProfile(snap.data());
+    };
+    fetchUser();
   }, []);
 
-  const handleLogout = () => {
-    alert("Logging out...");
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate("/login");
   };
 
-  // Reusable Toggle Component
-  const ToggleSwitch = ({ checked, onChange }) => (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        checked ? "bg-blue-600" : "bg-gray-700"
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-  );
-
-  // Reusable Setting Item
-  const SettingItem = ({ icon: Icon, title, subtitle, onClick, showArrow = true }) => (
+  const SettingItem = ({ icon: Icon, title, subtitle, onClick }) => (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between p-4 bg-neutral-900 rounded-xl hover:bg-neutral-800 transition-colors"
+      className="w-full flex items-center justify-between p-4 bg-neutral-900 rounded-xl hover:bg-neutral-800"
     >
       <div className="flex items-center gap-4">
         <div className="p-2 bg-neutral-800 rounded-lg">
           <Icon size={20} className="text-gray-400" />
         </div>
-        <div className="text-left">
+        <div>
           <p className="font-medium">{title}</p>
-          {subtitle && <p className="text-sm text-gray-400 mt-0.5">{subtitle}</p>}
+          <p className="text-sm text-gray-400">{subtitle}</p>
         </div>
       </div>
-      {showArrow && <ChevronRight size={20} className="text-gray-500" />}
+      <ChevronRight size={20} className="text-gray-500" />
     </button>
-  );
-
-  // Toggle Item Row
-  const ToggleItem = ({ icon: Icon, title, subtitle, checked, onChange }) => (
-    <div className="w-full flex items-center justify-between p-4 bg-neutral-900 rounded-xl">
-      <div className="flex items-center gap-4">
-        <div className="p-2 bg-neutral-800 rounded-lg">
-          <Icon size={20} className="text-gray-400" />
-        </div>
-        <div className="text-left">
-          <p className="font-medium">{title}</p>
-          {subtitle && <p className="text-sm text-gray-400 mt-0.5">{subtitle}</p>}
-        </div>
-      </div>
-      <ToggleSwitch checked={checked} onChange={onChange} />
-    </div>
-  );
-
-  // Theme Selector Section
-  const ThemeSelector = () => (
-    <div className="w-full p-4 bg-neutral-900 rounded-xl">
-      <div className="flex items-center gap-4 mb-4">
-        <div className="p-2 bg-neutral-800 rounded-lg">
-          <Palette size={20} className="text-gray-400" />
-        </div>
-        <div className="text-left">
-          <p className="font-medium">Theme</p>
-          <p className="text-sm text-gray-400 mt-0.5">Customize your appearance</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-3 mt-3">
-        <button
-          onClick={() => setTheme("light")}
-          className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
-            theme === "light" ? "bg-blue-600" : "bg-neutral-800 hover:bg-neutral-700"
-          }`}
-        >
-          <Sun size={20} />
-          <span className="text-xs">Light</span>
-        </button>
-
-        <button
-          onClick={() => setTheme("dark")}
-          className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
-            theme === "dark" ? "bg-blue-600" : "bg-neutral-800 hover:bg-neutral-700"
-          }`}
-        >
-          <Moon size={20} />
-          <span className="text-xs">Dark</span>
-        </button>
-
-        <button
-          onClick={() => setTheme("system")}
-          className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
-            theme === "system" ? "bg-blue-600" : "bg-neutral-800 hover:bg-neutral-700"
-          }`}
-        >
-          <Monitor size={20} />
-          <span className="text-xs">System</span>
-        </button>
-      </div>
-    </div>
   );
 
   return (
     <div className="min-h-screen bg-black text-white p-6 max-w-2xl mx-auto">
+
       {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-gray-400 mt-1">Manage your account and preferences</p>
+        <p className="text-gray-400">Manage your account and preferences</p>
       </div>
 
-      {/* PROFILE CARD */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl border border-neutral-800">
+      {/* PROFILE */}
+      <div className="mb-8 p-6 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold">
-            {firebaseUser?.displayName?.charAt(0) || "U"}
+            {profile?.fullName?.charAt(0) || "U"}
           </div>
+
           <div className="flex-1">
             <h3 className="text-xl font-semibold">
-              {firebaseUser?.displayName || "User"}
+              {profile?.fullName || "User"}
             </h3>
             <p className="text-gray-400 text-sm">
-              {firebaseUser?.email || "user@example.com"}
+              {auth.currentUser?.email}
             </p>
           </div>
+
           <button
-            onClick={() => alert("Edit Profile clicked")}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+            onClick={() => navigate("/edit-profile")}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium"
           >
             Edit
           </button>
         </div>
       </div>
 
-      {/* ACCOUNT SECTION */}
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Account</h2>
-        <div className="space-y-3">
-          <SettingItem icon={User} title="Edit Profile" subtitle="Update your photo, bio, and details" onClick={() => alert("Edit Profile")} />
-          <SettingItem icon={Lock} title="Change Password" subtitle="Update your password regularly" onClick={() => alert("Change Password")} />
-        </div>
-      </div>
+      {/* ACCOUNT */}
+      <Section title="Account">
+        <SettingItem
+          icon={User}
+          title="Edit Profile"
+          subtitle="Update your photo and info"
+          onClick={() => navigate("/edit-profile")}
+        />
+        <SettingItem
+          icon={Lock}
+          title="Change Password"
+          subtitle="Update your password"
+          onClick={() => navigate("/change-password")}
+        />
+      </Section>
 
-      {/* NOTIFICATIONS SECTION */}
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Notifications</h2>
-        <div className="space-y-3">
-          <ToggleItem
-            icon={Bell}
-            title="Push Notifications"
-            subtitle="Receive alerts on this device"
-            checked={pushNotifications}
-            onChange={setPushNotifications}
-          />
-          <ToggleItem
-            icon={Bell}
-            title="Email Notifications"
-            subtitle="Get updates via email"
-            checked={emailNotifications}
-            onChange={setEmailNotifications}
-          />
-        </div>
-      </div>
+      {/* NOTIFICATIONS */}
+      <Section title="Notifications">
+        <ToggleItem
+          icon={Bell}
+          title="Push Notifications"
+          value={pushNotifications}
+          onChange={() => setPushNotifications(!pushNotifications)}
+        />
+        <ToggleItem
+          icon={Bell}
+          title="Email Notifications"
+          value={emailNotifications}
+          onChange={() => setEmailNotifications(!emailNotifications)}
+        />
+      </Section>
 
       {/* APPEARANCE */}
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Appearance</h2>
-        <ThemeSelector />
-      </div>
-
-      {/* SECURITY */}
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Privacy & Security</h2>
-        <div className="space-y-3">
-          <ToggleItem
-            icon={Shield}
-            title="Private Account"
-            subtitle="Only approved followers can see your posts"
-            checked={privateAccount}
-            onChange={setPrivateAccount}
-          />
-          <SettingItem icon={Lock} title="Blocked Accounts" subtitle="Manage blocked users" onClick={() => alert("Blocked Accounts")} />
-          <SettingItem icon={Shield} title="Two-Step Verification" subtitle="Add extra security to your account" onClick={() => alert("Two-Step Verification")} />
+      <Section title="Appearance">
+        <div className="grid grid-cols-3 gap-3">
+          <ThemeButton icon={Sun} label="Light" active={theme === "light"} onClick={() => setTheme("light")} />
+          <ThemeButton icon={Moon} label="Dark" active={theme === "dark"} onClick={() => setTheme("dark")} />
+          <ThemeButton icon={Monitor} label="System" active={theme === "system"} onClick={() => setTheme("system")} />
         </div>
-      </div>
+      </Section>
+
+      {/* PRIVACY */}
+      <Section title="Privacy & Security">
+        <ToggleItem
+          icon={Shield}
+          title="Private Account"
+          value={privateAccount}
+          onChange={() => setPrivateAccount(!privateAccount)}
+        />
+        <SettingItem
+          icon={Shield}
+          title="Blocked Accounts"
+          subtitle="Manage blocked users"
+          onClick={() => {}}
+        />
+        <SettingItem
+          icon={Shield}
+          title="Two-Step Verification"
+          subtitle="Add extra security"
+          onClick={() => {}}
+        />
+      </Section>
 
       {/* HELP */}
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Help & Support</h2>
-        <div className="space-y-3">
-          <SettingItem icon={HelpCircle} title="Help Center" subtitle="Get help and support" onClick={() => alert("Help Center")} />
-          <SettingItem icon={FileText} title="Report a Problem" subtitle="Let us know if something isn't working" onClick={() => setShowReportModal(true)} />
-        </div>
-      </div>
+      <Section title="Help & Support">
+        <SettingItem
+          icon={HelpCircle}
+          title="Help Center"
+          subtitle="Get help and support"
+          onClick={() => {}}
+        />
+        <SettingItem
+          icon={FileText}
+          title="Report a Problem"
+          subtitle="Let us know if something isn't working"
+          onClick={() => setShowReportModal(true)}
+        />
+      </Section>
 
       {/* LEGAL */}
-      <div className="mb-8">
-        <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-wider">Legal</h2>
-        <div className="space-y-3">
-            <SettingItem
-            icon={FileText}
-            title="Terms & Conditions"
-            subtitle="Review our terms of service"
-            onClick={() => setShowTerms(true)}
-            />
+      <Section title="Legal">
+        <SettingItem icon={FileText} title="Terms & Conditions" subtitle="Review our terms" />
+        <SettingItem icon={FileText} title="Privacy Policy" subtitle="How we protect your data" />
+      </Section>
 
-          <SettingItem
-           icon={FileText}
-           title="Privacy Policy"
-           subtitle="Learn how we protect your data"
-           onClick={() => setShowPrivacy(true)}
-          />
-
-        </div>
-      </div>
-
-      {/* LOGOUT + DELETE */}
-      <div className="mb-8 space-y-3">
+      {/* LOGOUT */}
+      <div className="mt-6 space-y-3">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-3 bg-neutral-900 hover:bg-neutral-800 py-4 rounded-xl font-semibold transition-colors border border-neutral-800"
+          className="w-full flex justify-center items-center gap-2 py-4 bg-neutral-900 hover:bg-neutral-800 rounded-xl"
         >
-          <LogOut size={20} />
-          Log Out
+          <LogOut /> Log Out
         </button>
 
-        <button
-          onClick={() => {
-            if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-              alert("Account deletion initiated");
-            }
-          }}
-          className="w-full flex items-center justify-center gap-3 bg-red-600/10 hover:bg-red-600/20 py-4 rounded-xl font-semibold text-red-400 transition-colors border border-red-600/20"
-        >
-          <Trash2 size={20} />
-          Delete Account
+        <button className="w-full py-4 bg-red-600/20 text-red-400 rounded-xl flex justify-center items-center gap-2">
+          <Trash2 /> Delete Account
         </button>
       </div>
 
-      {/* FOOTER */}
-      <div className="text-center text-gray-500 text-sm pb-6">
-        <p>Version 1.0.0</p>
-      </div>
-
-      {showReportModal && <ReportProblemModal onClose={() => setShowReportModal(false)} />}
+      {showReportModal && (
+        <ReportProblemModal onClose={() => setShowReportModal(false)} />
+      )}
     </div>
   );
 }
+
+/* ----------------- HELPERS ------------------ */
+
+const Section = ({ title, children }) => (
+  <div className="mb-6">
+    <h2 className="text-sm font-semibold mb-3 text-gray-400 uppercase">
+      {title}
+    </h2>
+    <div className="space-y-3">{children}</div>
+  </div>
+);
+
+const ToggleItem = ({ icon: Icon, title, value, onChange }) => (
+  <div className="flex items-center justify-between p-4 bg-neutral-900 rounded-xl">
+    <div className="flex items-center gap-4">
+      <div className="p-2 bg-neutral-800 rounded-lg">
+        <Icon size={20} className="text-gray-400" />
+      </div>
+      <p>{title}</p>
+    </div>
+    <button
+      onClick={onChange}
+      className={`w-11 h-6 rounded-full transition ${
+        value ? "bg-blue-600" : "bg-gray-600"
+      }`}
+    >
+      <div
+        className={`h-5 w-5 bg-white rounded-full transform transition ${
+          value ? "translate-x-5" : "translate-x-1"
+        }`}
+      />
+    </button>
+  </div>
+);
+
+const ThemeButton = ({ icon: Icon, label, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center gap-2 p-4 rounded-xl ${
+      active ? "bg-blue-600" : "bg-neutral-900"
+    }`}
+  >
+    <Icon />
+    <span>{label}</span>
+  </button>
+);
