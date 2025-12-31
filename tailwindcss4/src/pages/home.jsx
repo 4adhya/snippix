@@ -51,7 +51,7 @@ export default function Home() {
             { label: "Explore", onClick: handleExplore },
             { label: "Create your first Snippix!", onClick: handleCreateSnippix },
             { label: "Set up your profile", onClick: () => navigate("/setup-profile") },
-            { label: "Settings", onClick: handleSettings },
+            { label: "Chat", onClick: () => navigate("/chat") },
           ].map((card, index) => (
             <div
               key={index}

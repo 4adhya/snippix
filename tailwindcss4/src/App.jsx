@@ -10,6 +10,10 @@ import Settings from "./pages/settings.jsx";
 import "./App.css";
 import CollageMaker from "./pages/collage";
 import SetupProfile from "./pages/SetupProfile";
+import DMChat from "./pages/DMChat";
+import Chat from "./pages/Chat";
+
+
 
 
 export default function App() {
@@ -66,6 +70,9 @@ export default function App() {
               <Route path="/profiles" element={<ProfileScroll />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/collage" element={<CollageMaker />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/dm/:uid" element={<DMChat />} />
+              <Route path="/chat/:uid" element={<DMChat />} />
             </Routes>
           )}
         </div>
