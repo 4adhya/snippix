@@ -12,18 +12,15 @@ export default function Home() {
   const handleSettings = () => {
     navigate("/settings");
   };
-    const handleCreateSnippix = () => {
+
+  const handleCreateSnippix = () => {
     navigate("/collage");
   };
 
-
   return (
     <div className="min-h-screen bg-transparent text-white">
-
-
       {/* TOP NAVBAR */}
       <div className="flex justify-between items-center px-6 py-4 border-b border-white/10">
-        
         {/* Left Section */}
         <h2 className="text-2xl font-bold">Snippix</h2>
 
@@ -31,8 +28,6 @@ export default function Home() {
         <div className="flex items-center space-x-4">
           <Bell size={24} className="cursor-pointer" />
           <User size={24} className="cursor-pointer" />
-
-          {/* SETTINGS ICON (NOW CONNECTED) */}
           <Settings
             size={24}
             className="cursor-pointer"
@@ -55,7 +50,7 @@ export default function Home() {
           {[
             { label: "Explore", onClick: handleExplore },
             { label: "Create your first Snippix!", onClick: handleCreateSnippix },
-            { label: "Setup your Profile" },
+            { label: "Set up your profile", onClick: () => navigate("/setup-profile") },
             { label: "Settings", onClick: handleSettings },
           ].map((card, index) => (
             <div

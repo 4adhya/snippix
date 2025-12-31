@@ -9,6 +9,8 @@ import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
 import "./App.css";
 import CollageMaker from "./pages/collage";
+import SetupProfile from "./pages/SetupProfile";
+
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -60,6 +62,7 @@ export default function App() {
           {!loading && authenticated && (
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/setup-profile" element={<SetupProfile />} />
               <Route path="/profiles" element={<ProfileScroll />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/collage" element={<CollageMaker />} />
