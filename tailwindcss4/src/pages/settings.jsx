@@ -3,8 +3,6 @@ import {
   User,
   Bell,
   Lock,
-  Palette,
-  HelpCircle,
   Shield,
   FileText,
   LogOut,
@@ -13,10 +11,17 @@ import {
   Moon,
   Sun,
   Monitor,
+  HelpCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getAuth, signOut } from "firebase/auth";
-import { getDoc, doc } from "firebase/firestore";
+import {
+  getAuth,
+  signOut,
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from "firebase/auth";
+import { getDoc, doc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import ReportProblemModal from "../components/reportproblem.jsx";
 
@@ -43,6 +48,33 @@ export default function Settings() {
   const handleLogout = async () => {
     await signOut(auth);
     navigate("/login");
+  };
+
+  // ✅ DELETE ACCOUNT FUNCTION
+  const handleDeleteAccount = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const confirmDelete = window.confirm(
+      "⚠️ Are you sure you want to permanently delete your account? This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "users", user.uid));
+      await deleteUser(user);
+      alert("Your account has been deleted.");
+      navigate("/login");
+    } catch (error) {
+      if (error.code === "auth/requires-recent-login") {
+        alert("Please login again to delete your account.");
+        navigate("/login");
+      } else {
+        console.error(error);
+        alert("Something went wrong. Try again.");
+      }
+    }
   };
 
   const SettingItem = ({ icon: Icon, title, subtitle, onClick }) => (
@@ -115,18 +147,8 @@ export default function Settings() {
 
       {/* NOTIFICATIONS */}
       <Section title="Notifications">
-        <ToggleItem
-          icon={Bell}
-          title="Push Notifications"
-          value={pushNotifications}
-          onChange={() => setPushNotifications(!pushNotifications)}
-        />
-        <ToggleItem
-          icon={Bell}
-          title="Email Notifications"
-          value={emailNotifications}
-          onChange={() => setEmailNotifications(!emailNotifications)}
-        />
+        <ToggleItem icon={Bell} title="Push Notifications" value={pushNotifications} onChange={() => setPushNotifications(!pushNotifications)} />
+        <ToggleItem icon={Bell} title="Email Notifications" value={emailNotifications} onChange={() => setEmailNotifications(!emailNotifications)} />
       </Section>
 
       {/* APPEARANCE */}
@@ -140,40 +162,13 @@ export default function Settings() {
 
       {/* PRIVACY */}
       <Section title="Privacy & Security">
-        <ToggleItem
-          icon={Shield}
-          title="Private Account"
-          value={privateAccount}
-          onChange={() => setPrivateAccount(!privateAccount)}
-        />
-        <SettingItem
-          icon={Shield}
-          title="Blocked Accounts"
-          subtitle="Manage blocked users"
-          onClick={() => {}}
-        />
-        <SettingItem
-          icon={Shield}
-          title="Two-Step Verification"
-          subtitle="Add extra security"
-          onClick={() => {}}
-        />
+        <ToggleItem icon={Shield} title="Private Account" value={privateAccount} onChange={() => setPrivateAccount(!privateAccount)} />
       </Section>
 
       {/* HELP */}
       <Section title="Help & Support">
-        <SettingItem
-          icon={HelpCircle}
-          title="Help Center"
-          subtitle="Get help and support"
-          onClick={() => {}}
-        />
-        <SettingItem
-          icon={FileText}
-          title="Report a Problem"
-          subtitle="Let us know if something isn't working"
-          onClick={() => setShowReportModal(true)}
-        />
+        <SettingItem icon={HelpCircle} title="Help Center" subtitle="Get help and support" />
+        <SettingItem icon={FileText} title="Report a Problem" subtitle="Let us know if something isn't working" onClick={() => setShowReportModal(true)} />
       </Section>
 
       {/* LEGAL */}
@@ -182,7 +177,7 @@ export default function Settings() {
         <SettingItem icon={FileText} title="Privacy Policy" subtitle="How we protect your data" />
       </Section>
 
-      {/* LOGOUT */}
+      {/* LOGOUT + DELETE */}
       <div className="mt-6 space-y-3">
         <button
           onClick={handleLogout}
@@ -191,19 +186,20 @@ export default function Settings() {
           <LogOut /> Log Out
         </button>
 
-        <button className="w-full py-4 bg-red-600/20 text-red-400 rounded-xl flex justify-center items-center gap-2">
+        <button
+          onClick={handleDeleteAccount}
+          className="w-full py-4 bg-red-600/20 text-red-400 rounded-xl flex justify-center items-center gap-2 hover:bg-red-600/30"
+        >
           <Trash2 /> Delete Account
         </button>
       </div>
 
-      {showReportModal && (
-        <ReportProblemModal onClose={() => setShowReportModal(false)} />
-      )}
+      {showReportModal && <ReportProblemModal onClose={() => setShowReportModal(false)} />}
     </div>
   );
 }
 
-/* ----------------- HELPERS ------------------ */
+/* ---------------- HELPERS ---------------- */
 
 const Section = ({ title, children }) => (
   <div className="mb-6">
