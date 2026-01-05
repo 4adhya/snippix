@@ -1,0 +1,7 @@
+{
+  "IN": ["Delhi", "Jaipur", "Mumbai", "Goa"],
+  "FR": ["Paris", "Nice", "Lyon"],
+  "JP": ["Tokyo", "Kyoto", "Osaka"],
+  "IT": ["Rome", "Florence", "Venice"],
+  "US": ["New York", "Los Angeles", "San Francisco"]
+}

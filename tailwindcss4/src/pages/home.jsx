@@ -1,16 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, User, Settings } from "lucide-react";
+import Navbar from "../components/navbar";
+import SearchReveal from "../components/SearchReveal";
+import SearchPage from "./search";
+<Navbar onSearchClick={() => setSearchOpen(true)} />
+
 
 export default function Home() {
   const navigate = useNavigate();
 
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [showSearchPage, setShowSearchPage] = useState(false);
+
   const handleExplore = () => {
     navigate("/profiles");
-  };
-
-  const handleSettings = () => {
-    navigate("/settings");
   };
 
   const handleCreateSnippix = () => {
@@ -18,25 +21,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-white">
-      {/* TOP NAVBAR */}
-      <div className="flex justify-between items-center px-6 py-4 border-b border-white/10">
-        {/* Left Section */}
-        <h2 className="text-2xl font-bold">Snippix</h2>
+    <div className="min-h-screen bg-transparent text-white relative">
+      {/* NAVBAR */}
+      <Navbar onSearchClick={() => setSearchOpen(true)} />
 
-        {/* Right Icons */}
-        <div className="flex items-center space-x-4">
-          <Bell size={24} className="cursor-pointer" />
-          <User size={24} className="cursor-pointer" />
-          <Settings
-            size={24}
-            className="cursor-pointer"
-            onClick={handleSettings}
-          />
-        </div>
-      </div>
-
-      {/* Hero Section */}
+      {/* HERO */}
       <div className="pt-32 flex flex-col items-center justify-center text-center px-6">
         <h1 className="text-5xl font-bold mb-4">Welcome to Snippix</h1>
 
@@ -45,7 +34,6 @@ export default function Home() {
           Customize your vibe, connect with others, and make something beautiful.
         </p>
 
-        {/* Grid Cards */}
         <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
           {[
             { label: "Explore", onClick: handleExplore },
@@ -63,6 +51,14 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* SEARCH REVEAL OVERLAY */}
+      <SearchReveal
+        open={searchOpen}
+        onComplete={() => setShowSearchPage(true)}
+      >
+        {showSearchPage && <SearchPage />}
+      </SearchReveal>
     </div>
   );
 }

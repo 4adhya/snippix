@@ -1,40 +1,41 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, User, Settings } from "lucide-react";
+import { Bell, User, Settings, Search } from "lucide-react";
 
-export default function Navbar() {
+export default function Navbar({ onSearchClick }) {
   const navigate = useNavigate();
 
+  const handleSettings = () => {
+    navigate("/settings");
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md border-t border-gray-800 flex justify-around py-3 z-50">
-      
-      {/* HOME */}
-      <button
+    <div className="flex justify-between items-center px-6 py-4 border-b border-white/10">
+      {/* Left */}
+      <h2
+        className="text-2xl font-bold cursor-pointer"
         onClick={() => navigate("/")}
-        className="text-white flex flex-col items-center"
       >
-        <Home size={24} />
-        <span className="text-xs mt-1">Home</span>
-      </button>
+        Snippix
+      </h2>
 
-      {/* PROFILES */}
-      <button
-        onClick={() => navigate("/profiles")}
-        className="text-white flex flex-col items-center"
-      >
-        <User size={24} />
-        <span className="text-xs mt-1">Profiles</span>
-      </button>
+      {/* Center — Search Icon */}
+      <Search
+        size={22}
+        className="cursor-pointer opacity-80 hover:opacity-100"
+        onClick={onSearchClick}
+      />
 
-      {/* SETTINGS */}
-      <button
-        onClick={() => navigate("/settings")}
-        className="text-white flex flex-col items-center"
-      >
-        <Settings size={24} />
-        <span className="text-xs mt-1">Settings</span>
-      </button>
-
+      {/* Right */}
+      <div className="flex items-center space-x-4">
+        <Bell size={24} className="cursor-pointer" />
+        <User size={24} className="cursor-pointer" />
+        <Settings
+          size={24}
+          className="cursor-pointer"
+          onClick={handleSettings}
+        />
+      </div>
     </div>
   );
 }
