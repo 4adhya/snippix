@@ -22,9 +22,10 @@ export default function EditProfile() {
   const [bio, setBio] = useState("");
 
   const [checking, setChecking] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(null); // null | true | false
   const [error, setError] = useState("");
 
-  // 🔹 Load current profile
+  // 🔹 Load profile
   useEffect(() => {
     const fetchProfile = async () => {
       if (!auth.currentUser) return;
@@ -46,29 +47,48 @@ export default function EditProfile() {
     fetchProfile();
   }, []);
 
-  // 🔹 Check username uniqueness
-  const isUsernameUnique = async (name) => {
-    const q = query(
-      collection(db, "users"),
-      where("username", "==", name.toLowerCase())
-    );
-
-    const snap = await getDocs(q);
-
-    // No match → unique
-    if (snap.empty) return true;
-
-    // Allow if it's the same user
-    if (
-      snap.docs.length === 1 &&
-      snap.docs[0].id === auth.currentUser.uid
-    ) {
-      return true;
+  // 🔹 Debounced live username check
+  useEffect(() => {
+    if (!username.trim()) {
+      setIsAvailable(null);
+      return;
     }
 
-    return false;
-  };
+    const cleanUsername = username.toLowerCase().trim();
 
+    if (cleanUsername.length < 3) {
+      setIsAvailable(null);
+      return;
+    }
+
+    setChecking(true);
+
+    const timer = setTimeout(async () => {
+      const q = query(
+        collection(db, "users"),
+        where("username", "==", cleanUsername)
+      );
+
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        setIsAvailable(true);
+      } else if (
+        snap.docs.length === 1 &&
+        snap.docs[0].id === auth.currentUser.uid
+      ) {
+        setIsAvailable(true);
+      } else {
+        setIsAvailable(false);
+      }
+
+      setChecking(false);
+    }, 500); // ⏱ debounce delay
+
+    return () => clearTimeout(timer);
+  }, [username]);
+
+  // 🔹 Save profile
   const handleSave = async () => {
     setError("");
 
@@ -77,31 +97,18 @@ export default function EditProfile() {
       return;
     }
 
-    const cleanUsername = username.toLowerCase().trim();
-
-    if (cleanUsername.length < 3) {
-      setError("Username must be at least 3 characters");
-      return;
-    }
-
-    setChecking(true);
-
-    const unique = await isUsernameUnique(cleanUsername);
-
-    if (!unique) {
-      setError("Username already taken");
-      setChecking(false);
+    if (isAvailable === false) {
+      setError("Username is already taken");
       return;
     }
 
     await updateDoc(doc(db, "users", auth.currentUser.uid), {
       fullName,
-      username: cleanUsername,
+      username: username.toLowerCase().trim(),
       bio,
       updatedAt: Date.now(),
     });
 
-    setChecking(false);
     navigate("/settings");
   };
 
@@ -131,16 +138,26 @@ export default function EditProfile() {
       </div>
 
       {/* Username */}
-      <div className="mb-5">
+      <div className="mb-3">
         <label className="text-sm text-gray-400">Username</label>
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 outline-none focus:border-blue-500"
         />
-        <p className="text-xs text-gray-500 mt-1">
-          Username must be unique
-        </p>
+
+        {/* Live status */}
+        <div className="mt-2 text-sm">
+          {checking && (
+            <span className="text-gray-400">Checking availability…</span>
+          )}
+          {!checking && isAvailable === true && (
+            <span className="text-green-400">✓ Username available</span>
+          )}
+          {!checking && isAvailable === false && (
+            <span className="text-red-400">✕ Username already taken</span>
+          )}
+        </div>
       </div>
 
       {/* Bio */}
@@ -169,10 +186,10 @@ export default function EditProfile() {
 
         <button
           onClick={handleSave}
-          disabled={checking}
-          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium disabled:opacity-60"
+          disabled={checking || isAvailable === false}
+          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium disabled:opacity-50"
         >
-          {checking ? "Checking..." : "Save Changes"}
+          Save Changes
         </button>
       </div>
     </div>
