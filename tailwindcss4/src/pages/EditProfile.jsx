@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +20,9 @@ export default function EditProfile() {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState("");
 
   // 🔹 Load current profile
   useEffect(() => {
@@ -35,19 +46,62 @@ export default function EditProfile() {
     fetchProfile();
   }, []);
 
+  // 🔹 Check username uniqueness
+  const isUsernameUnique = async (name) => {
+    const q = query(
+      collection(db, "users"),
+      where("username", "==", name.toLowerCase())
+    );
+
+    const snap = await getDocs(q);
+
+    // No match → unique
+    if (snap.empty) return true;
+
+    // Allow if it's the same user
+    if (
+      snap.docs.length === 1 &&
+      snap.docs[0].id === auth.currentUser.uid
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
   const handleSave = async () => {
+    setError("");
+
     if (!fullName.trim() || !username.trim()) {
-      alert("Name and username are required");
+      setError("Full name and username are required");
+      return;
+    }
+
+    const cleanUsername = username.toLowerCase().trim();
+
+    if (cleanUsername.length < 3) {
+      setError("Username must be at least 3 characters");
+      return;
+    }
+
+    setChecking(true);
+
+    const unique = await isUsernameUnique(cleanUsername);
+
+    if (!unique) {
+      setError("Username already taken");
+      setChecking(false);
       return;
     }
 
     await updateDoc(doc(db, "users", auth.currentUser.uid), {
       fullName,
-      username,
+      username: cleanUsername,
       bio,
       updatedAt: Date.now(),
     });
 
+    setChecking(false);
     navigate("/settings");
   };
 
@@ -73,7 +127,6 @@ export default function EditProfile() {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           className="mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 outline-none focus:border-blue-500"
-          placeholder="Your name"
         />
       </div>
 
@@ -84,21 +137,26 @@ export default function EditProfile() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 outline-none focus:border-blue-500"
-          placeholder="username"
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Username must be unique
+        </p>
       </div>
 
       {/* Bio */}
-      <div className="mb-8">
+      <div className="mb-6">
         <label className="text-sm text-gray-400">Bio</label>
         <textarea
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={3}
           className="mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 outline-none focus:border-blue-500 resize-none"
-          placeholder="Tell something about yourself"
         />
       </div>
+
+      {error && (
+        <p className="text-red-400 text-sm mb-4">{error}</p>
+      )}
 
       {/* Actions */}
       <div className="flex gap-4">
@@ -111,9 +169,10 @@ export default function EditProfile() {
 
         <button
           onClick={handleSave}
-          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium"
+          disabled={checking}
+          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium disabled:opacity-60"
         >
-          Save Changes
+          {checking ? "Checking..." : "Save Changes"}
         </button>
       </div>
     </div>
