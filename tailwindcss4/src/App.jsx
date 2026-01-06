@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import AuthCard from "./components/AuthCard.jsx";
@@ -13,6 +13,7 @@ import DMChat from "./pages/DMChat";
 import Chat from "./pages/Chat";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Help from "./pages/Help"; // ✅ ADD THIS
 
 import "./App.css";
 
@@ -55,11 +56,11 @@ export default function App() {
 
         <Routes>
 
-          {/* PUBLIC ROUTES */}
+          {/* ================= PUBLIC ROUTES ================= */}
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
 
-          {/* AUTH ROUTE */}
+          {/* ================= AUTH ROUTE ================= */}
           {!authenticated && (
             <Route
               path="*"
@@ -67,13 +68,14 @@ export default function App() {
             />
           )}
 
-          {/* PROTECTED ROUTES */}
+          {/* ================= PROTECTED ROUTES ================= */}
           {authenticated && (
             <>
               <Route path="/" element={<Home />} />
               <Route path="/setup-profile" element={<SetupProfile />} />
               <Route path="/profiles" element={<ProfileScroll />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/help" element={<Help />} /> {/* ✅ HELP CENTER */}
               <Route path="/collage" element={<CollageMaker />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/chat/:uid" element={<DMChat />} />
@@ -84,4 +86,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

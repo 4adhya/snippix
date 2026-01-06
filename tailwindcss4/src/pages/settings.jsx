@@ -8,9 +8,6 @@ import {
   LogOut,
   Trash2,
   ChevronRight,
-  Moon,
-  Sun,
-  Monitor,
   HelpCircle,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,7 +16,12 @@ import {
   signOut,
   deleteUser,
 } from "firebase/auth";
-import { getDoc, doc, deleteDoc } from "firebase/firestore";
+import {
+  getDoc,
+  doc,
+  deleteDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../firebase";
 import ReportProblemModal from "../components/reportproblem.jsx";
 
@@ -29,19 +31,40 @@ export default function Settings() {
 
   const [profile, setProfile] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [theme, setTheme] = useState("dark");
+
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [privateAccount, setPrivateAccount] = useState(false);
 
+  // 🔹 Fetch user profile + privacy state
   useEffect(() => {
     const fetchUser = async () => {
       if (!auth.currentUser) return;
-      const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
-      if (snap.exists()) setProfile(snap.data());
+
+      const ref = doc(db, "users", auth.currentUser.uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const data = snap.data();
+        setProfile(data);
+        setPrivateAccount(data.isPrivate ?? false);
+      }
     };
+
     fetchUser();
   }, []);
+
+  // 🔹 Toggle Private Account (Firestore-backed)
+  const togglePrivateAccount = async () => {
+    if (!auth.currentUser) return;
+
+    const newValue = !privateAccount;
+    setPrivateAccount(newValue);
+
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+      isPrivate: newValue,
+    });
+  };
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -77,7 +100,7 @@ export default function Settings() {
         <div className="p-2 bg-neutral-800 rounded-lg">
           <Icon size={20} className="text-gray-400" />
         </div>
-        <div>
+        <div className="text-left">
           <p className="font-medium">{title}</p>
           <p className="text-sm text-gray-400">{subtitle}</p>
         </div>
@@ -122,35 +145,78 @@ export default function Settings() {
 
       {/* ACCOUNT */}
       <Section title="Account">
-        <SettingItem icon={User} title="Edit Profile" subtitle="Update your info" onClick={() => navigate("/edit-profile")} />
-        <SettingItem icon={Lock} title="Change Password" subtitle="Update password" onClick={() => navigate("/change-password")} />
+        <SettingItem
+          icon={User}
+          title="Edit Profile"
+          subtitle="Update your info"
+          onClick={() => navigate("/edit-profile")}
+        />
+        <SettingItem
+          icon={Lock}
+          title="Change Password"
+          subtitle="Update password"
+          onClick={() => navigate("/change-password")}
+        />
       </Section>
 
       {/* NOTIFICATIONS */}
       <Section title="Notifications">
-        <ToggleItem icon={Bell} title="Push Notifications" value={pushNotifications} onChange={() => setPushNotifications(!pushNotifications)} />
-        <ToggleItem icon={Bell} title="Email Notifications" value={emailNotifications} onChange={() => setEmailNotifications(!emailNotifications)} />
+        <ToggleItem
+          icon={Bell}
+          title="Push Notifications"
+          value={pushNotifications}
+          onChange={() => setPushNotifications(!pushNotifications)}
+        />
+        <ToggleItem
+          icon={Bell}
+          title="Email Notifications"
+          value={emailNotifications}
+          onChange={() => setEmailNotifications(!emailNotifications)}
+        />
       </Section>
 
       {/* PRIVACY */}
       <Section title="Privacy & Security">
-        <ToggleItem icon={Shield} title="Private Account" value={privateAccount} onChange={() => setPrivateAccount(!privateAccount)} />
+        <ToggleItem
+          icon={Shield}
+          title="Private Account"
+          value={privateAccount}
+          onChange={togglePrivateAccount}
+        />
       </Section>
 
       {/* HELP */}
       <Section title="Help & Support">
-        <SettingItem icon={HelpCircle} title="Help Center" subtitle="Get help" />
-        <SettingItem icon={FileText} title="Report a Problem" subtitle="Tell us what's wrong" onClick={() => setShowReportModal(true)} />
+        <SettingItem
+          icon={HelpCircle}
+          title="Help Center"
+          subtitle="FAQs & guides"
+          onClick={() => navigate("/help")}
+        />
+        <SettingItem
+          icon={FileText}
+          title="Report a Problem"
+          subtitle="Tell us what's wrong"
+          onClick={() => setShowReportModal(true)}
+        />
       </Section>
 
       {/* LEGAL */}
       <Section title="Legal">
         <Link to="/terms">
-          <SettingItem icon={FileText} title="Terms & Conditions" subtitle="Review our terms" />
+          <SettingItem
+            icon={FileText}
+            title="Terms & Conditions"
+            subtitle="Review our terms"
+          />
         </Link>
 
         <Link to="/privacy">
-          <SettingItem icon={FileText} title="Privacy Policy" subtitle="How we protect your data" />
+          <SettingItem
+            icon={FileText}
+            title="Privacy Policy"
+            subtitle="How we protect your data"
+          />
         </Link>
       </Section>
 
@@ -171,12 +237,14 @@ export default function Settings() {
         </button>
       </div>
 
-      {showReportModal && <ReportProblemModal onClose={() => setShowReportModal(false)} />}
+      {showReportModal && (
+        <ReportProblemModal onClose={() => setShowReportModal(false)} />
+      )}
     </div>
   );
 }
 
-/* HELPERS */
+/* ================= HELPERS ================= */
 
 const Section = ({ title, children }) => (
   <div className="mb-6">
