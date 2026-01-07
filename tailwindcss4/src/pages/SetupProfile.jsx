@@ -4,6 +4,8 @@ import { auth, db } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
+const BIO_LIMIT = 120;
+
 export default function SetupProfile() {
   const navigate = useNavigate();
   const user = auth.currentUser;
@@ -86,6 +88,12 @@ export default function SetupProfile() {
     }
   };
 
+  /* ================= SKIP ================= */
+
+  const handleSkip = () => {
+    navigate("/profiles"); // or home/dashboard
+  };
+
   /* ================= STATES ================= */
 
   if (!user) {
@@ -148,20 +156,37 @@ export default function SetupProfile() {
             onChange={(e) => setRole(e.target.value)}
           />
 
-          <textarea
-            className="w-full px-4 py-3 rounded-xl bg-neutral-800 border border-white/10 outline-none focus:border-purple-500 transition resize-none"
-            placeholder="Short bio"
-            rows={3}
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-          />
+          {/* BIO + COUNTER */}
+          <div>
+            <textarea
+              className="w-full px-4 py-3 rounded-xl bg-neutral-800 border border-white/10 outline-none focus:border-purple-500 transition resize-none"
+              placeholder="Short bio"
+              rows={3}
+              maxLength={BIO_LIMIT}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+            />
 
+            <p className="mt-1 text-right text-xs text-gray-400">
+              Bio ({bio.length} / {BIO_LIMIT})
+            </p>
+          </div>
+
+          {/* SAVE */}
           <button
             onClick={handleSave}
             disabled={saving}
             className="w-full mt-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 font-semibold transition disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save profile"}
+          </button>
+
+          {/* SKIP */}
+          <button
+            onClick={handleSkip}
+            className="w-full text-sm text-gray-400 hover:text-white transition mt-2"
+          >
+            Skip → complete later
           </button>
 
         </div>
