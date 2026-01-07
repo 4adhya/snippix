@@ -9,6 +9,7 @@ import {
   Trash2,
   ChevronRight,
   HelpCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -153,10 +154,21 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-black text-white p-6 max-w-2xl mx-auto">
 
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-gray-400">Manage your account and preferences</p>
+      {/* HEADER WITH BACK */}
+      <div className="flex items-center gap-4 mb-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 rounded-full hover:bg-white/10 transition"
+        >
+          <ArrowLeft size={22} />
+        </button>
+
+        <div>
+          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-gray-400">
+            Manage your account and preferences
+          </p>
+        </div>
       </div>
 
       {/* PROFILE */}
