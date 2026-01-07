@@ -71,19 +71,11 @@ export default function Settings() {
 
     try {
       setUploading(true);
-
-      const imageRef = ref(
-        storage,
-        `profilePhotos/${auth.currentUser.uid}`
-      );
-
+      const imageRef = ref(storage, `profilePhotos/${auth.currentUser.uid}`);
       await uploadBytes(imageRef, file);
       const downloadURL = await getDownloadURL(imageRef);
 
-      await updateProfile(auth.currentUser, {
-        photoURL: downloadURL,
-      });
-
+      await updateProfile(auth.currentUser, { photoURL: downloadURL });
       setPhotoURL(downloadURL);
     } catch (err) {
       console.error("Profile photo upload failed", err);
@@ -154,16 +146,16 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-black text-white p-6 max-w-2xl mx-auto">
 
-      {/* HEADER WITH BACK */}
-      <div className="flex items-center gap-4 mb-8">
+      {/* ================= HEADER ================= */}
+      <div className="relative mb-8 pt-2">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 rounded-full hover:bg-white/10 transition"
+          className="absolute left-0 top-0 p-3 rounded-full hover:bg-white/10 transition"
         >
-          <ArrowLeft size={22} />
+          <ArrowLeft size={26} />
         </button>
 
-        <div>
+        <div className="text-center">
           <h1 className="text-3xl font-bold">Settings</h1>
           <p className="text-gray-400">
             Manage your account and preferences
@@ -171,11 +163,10 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* PROFILE */}
+      {/* ================= PROFILE ================= */}
       <div className="mb-8 p-6 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl">
         <div className="flex items-center gap-4">
 
-          {/* PHOTO */}
           <div className="relative">
             <label htmlFor="photoUpload" className="cursor-pointer">
               {photoURL ? (
@@ -204,7 +195,6 @@ export default function Settings() {
             />
           </div>
 
-          {/* INFO */}
           <div className="flex-1">
             <h3 className="text-xl font-semibold">
               {profile?.fullName || "User"}
@@ -226,7 +216,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* ACCOUNT */}
+      {/* ================= SECTIONS ================= */}
       <Section title="Account">
         <SettingItem
           icon={User}
@@ -242,7 +232,6 @@ export default function Settings() {
         />
       </Section>
 
-      {/* NOTIFICATIONS */}
       <Section title="Notifications">
         <ToggleItem
           icon={Bell}
@@ -258,7 +247,6 @@ export default function Settings() {
         />
       </Section>
 
-      {/* PRIVACY */}
       <Section title="Privacy & Security">
         <ToggleItem
           icon={Shield}
@@ -268,7 +256,6 @@ export default function Settings() {
         />
       </Section>
 
-      {/* HELP */}
       <Section title="Help & Support">
         <SettingItem
           icon={HelpCircle}
@@ -284,7 +271,6 @@ export default function Settings() {
         />
       </Section>
 
-      {/* LEGAL */}
       <Section title="Legal">
         <Link to="/terms">
           <SettingItem
@@ -302,7 +288,7 @@ export default function Settings() {
         </Link>
       </Section>
 
-      {/* LOGOUT */}
+      {/* ================= LOGOUT ================= */}
       <div className="mt-6 space-y-3">
         <button
           onClick={handleLogout}
