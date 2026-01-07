@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/navbar";
 import SearchReveal from "../components/SearchReveal";
 import SearchPage from "./search";
-<Navbar onSearchClick={() => setSearchOpen(true)} />
-
 
 export default function Home() {
   const navigate = useNavigate();
@@ -18,6 +16,12 @@ export default function Home() {
 
   const handleCreateSnippix = () => {
     navigate("/collage");
+  };
+
+  // This function resets the states to hide the search overlay
+  const handleCloseSearch = () => {
+    setShowSearchPage(false);
+    setSearchOpen(false);
   };
 
   return (
@@ -57,7 +61,8 @@ export default function Home() {
         open={searchOpen}
         onComplete={() => setShowSearchPage(true)}
       >
-        {showSearchPage && <SearchPage />}
+        {/* Pass the close function here */}
+        {showSearchPage && <SearchPage onClose={handleCloseSearch} />}
       </SearchReveal>
     </div>
   );
