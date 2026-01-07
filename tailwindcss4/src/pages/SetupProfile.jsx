@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 import { auth, db } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
@@ -14,61 +15,78 @@ export default function SetupProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // 🔹 Load existing profile (if any)
+  /* ================= LOAD PROFILE ================= */
+
   useEffect(() => {
     if (!user) return;
 
     const loadProfile = async () => {
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
+      try {
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        const data = snap.data();
-        setFullName(data.fullName || "");
-        setUsername(data.username || "");
-        setRole(data.role || "Creator");
-        setBio(data.bio || "");
+        if (snap.exists()) {
+          const data = snap.data();
+          setFullName(data.fullName || "");
+          setUsername(data.username || "");
+          setRole(data.role || "Creator");
+          setBio(data.bio || "");
+        }
+      } catch (err) {
+        console.error("Failed to load profile", err);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     loadProfile();
   }, [user]);
 
+  /* ================= SAVE ================= */
+
   const handleSave = async () => {
     if (!user) return;
 
     if (!fullName.trim()) {
-      alert("Please enter your name");
+      alert("Please enter your full name");
       return;
     }
 
     setSaving(true);
 
     const initials = fullName
+      .trim()
       .split(" ")
       .map((n) => n[0])
       .join("")
-      .toUpperCase();
+      .toUpperCase()
+      .slice(0, 2);
 
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        uid: user.uid,
-        fullName,
-        username,
-        role,
-        bio,
-        initials,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+    try {
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          uid: user.uid,
+          fullName: fullName.trim(),
+          username: username.trim(),
+          role: role.trim(),
+          bio: bio.trim(),
+          initials,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
 
-    setSaving(false);
-    navigate("/profiles"); // change if needed
+      navigate("/profiles"); // change if needed
+    } catch (err) {
+      console.error("Failed to save profile", err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  /* ================= STATES ================= */
 
   if (!user) {
     return (
@@ -86,37 +104,52 @@ export default function SetupProfile() {
     );
   }
 
+  /* ================= UI ================= */
+
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
-      <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-2xl p-8">
-        <h1 className="text-3xl font-bold mb-6 text-center">
+
+      <div className="relative w-full max-w-md bg-neutral-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+
+        {/* BACK ARROW */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute left-4 top-4 p-3 rounded-full hover:bg-white/10 transition"
+        >
+          <ArrowLeft size={28} />
+        </button>
+
+        {/* TITLE */}
+        <h1 className="text-3xl font-bold mb-8 text-center">
           Set up your profile
         </h1>
 
+        {/* FORM */}
         <div className="space-y-4">
+
           <input
-            className="w-full p-3 rounded-xl bg-white/10 border border-white/20"
+            className="w-full px-4 py-3 rounded-xl bg-neutral-800 border border-white/10 outline-none focus:border-purple-500 transition"
             placeholder="Full name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />
 
           <input
-            className="w-full p-3 rounded-xl bg-white/10 border border-white/20"
+            className="w-full px-4 py-3 rounded-xl bg-neutral-800 border border-white/10 outline-none focus:border-purple-500 transition"
             placeholder="Username (optional)"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
 
           <input
-            className="w-full p-3 rounded-xl bg-white/10 border border-white/20"
+            className="w-full px-4 py-3 rounded-xl bg-neutral-800 border border-white/10 outline-none focus:border-purple-500 transition"
             placeholder="Role (Creator, Photographer, etc)"
             value={role}
             onChange={(e) => setRole(e.target.value)}
           />
 
           <textarea
-            className="w-full p-3 rounded-xl bg-white/10 border border-white/20"
+            className="w-full px-4 py-3 rounded-xl bg-neutral-800 border border-white/10 outline-none focus:border-purple-500 transition resize-none"
             placeholder="Short bio"
             rows={3}
             value={bio}
@@ -126,10 +159,11 @@ export default function SetupProfile() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full mt-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 font-semibold transition"
+            className="w-full mt-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 font-semibold transition disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save profile"}
           </button>
+
         </div>
       </div>
     </div>
