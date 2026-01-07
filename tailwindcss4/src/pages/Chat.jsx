@@ -7,6 +7,10 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
+  updateDoc,
+  doc,
+  where,
+  getDocs as getChatDocs,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
@@ -33,7 +37,7 @@ export default function Chat() {
     fetchUsers();
   }, [currentUser]);
 
-  // 🔹 Chat ID (same for both users)
+  // 🔹 Chat ID
   const chatId =
     selectedUser &&
     [currentUser.uid, selectedUser.uid].sort().join("_");
@@ -48,7 +52,22 @@ export default function Chat() {
     );
 
     const unsub = onSnapshot(q, snap => {
-      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setMessages(msgs);
+
+      // 👀 Mark delivered & seen
+      snap.docs.forEach(async d => {
+        const data = d.data();
+        if (
+          data.senderId !== currentUser.uid &&
+          (!data.deliveredTo || !data.seenBy)
+        ) {
+          await updateDoc(doc(db, "chats", chatId, "messages", d.id), {
+            deliveredTo: true,
+            seenBy: true,
+          });
+        }
+      });
     });
 
     return () => unsub();
@@ -62,12 +81,14 @@ export default function Chat() {
       text,
       senderId: currentUser.uid,
       createdAt: serverTimestamp(),
+      deliveredTo: false,
+      seenBy: false,
     });
 
     setText("");
   };
 
-  // 🔹 Enter key handler
+  // 🔹 Enter → Send
   const handleKeyDown = e => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -78,7 +99,7 @@ export default function Chat() {
   return (
     <div className="min-h-screen bg-black text-white flex">
       
-      {/* LEFT SIDEBAR */}
+      {/* LEFT */}
       <div className="w-[360px] border-r border-white/10">
         <h1 className="text-xl font-semibold px-4 py-4 border-b border-white/10">
           Messages
@@ -103,7 +124,7 @@ export default function Chat() {
         ))}
       </div>
 
-      {/* RIGHT CHAT */}
+      {/* RIGHT */}
       <div className="flex-1 flex flex-col">
         {!selectedUser ? (
           <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -112,14 +133,9 @@ export default function Chat() {
         ) : (
           <>
             {/* HEADER */}
-            <div className="px-6 py-4 border-b border-white/10 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-semibold">
-                {selectedUser.fullName?.[0]}
-              </div>
-              <div>
-                <p className="font-medium">{selectedUser.fullName}</p>
-                <p className="text-sm text-gray-400">@{selectedUser.username}</p>
-              </div>
+            <div className="px-6 py-4 border-b border-white/10">
+              <p className="font-medium">{selectedUser.fullName}</p>
+              <p className="text-sm text-gray-400">@{selectedUser.username}</p>
             </div>
 
             {/* MESSAGES */}
@@ -135,7 +151,17 @@ export default function Chat() {
                     }
                   `}
                 >
-                  {msg.text}
+                  <p>{msg.text}</p>
+
+                  {msg.senderId === currentUser.uid && (
+                    <p className="text-xs text-right mt-1 opacity-70">
+                      {msg.seenBy
+                        ? "Seen"
+                        : msg.deliveredTo
+                        ? "Delivered"
+                        : "Sent"}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
