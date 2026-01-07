@@ -10,12 +10,15 @@ import {
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Your Firebase configuration
+// 🔥 Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCu10zr3U6kXNIaxMYQtHjMFzi-kkTQrVA",
   authDomain: "snippix-d86db.firebaseapp.com",
   projectId: "snippix-d86db",
-  storageBucket: "snippix-d86db.firebasestorage.app",
+
+  // ✅ FIXED (VERY IMPORTANT)
+  storageBucket: "snippix-d86db.appspot.com",
+
   messagingSenderId: "187852135764",
   appId: "1:187852135764:web:0e0ee5fc60cbe88cac3cc1",
 };
@@ -27,6 +30,10 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// ----------------------------
+// AUTH HELPERS
+// ----------------------------
 
 // Create user (Signup) using username → internal email
 export const registerUser = (username, password) => {

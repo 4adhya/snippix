@@ -15,6 +15,7 @@ import {
   getAuth,
   signOut,
   deleteUser,
+  updateProfile,
 } from "firebase/auth";
 import {
   getDoc,
@@ -22,7 +23,8 @@ import {
   deleteDoc,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../firebase";
 import ReportProblemModal from "../components/reportproblem.jsx";
 
 export default function Settings() {
@@ -36,25 +38,61 @@ export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [privateAccount, setPrivateAccount] = useState(false);
 
-  // 🔹 Fetch user profile + privacy state
+  const [photoURL, setPhotoURL] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  /* ================= FETCH USER ================= */
+
   useEffect(() => {
     const fetchUser = async () => {
       if (!auth.currentUser) return;
 
-      const ref = doc(db, "users", auth.currentUser.uid);
-      const snap = await getDoc(ref);
-
+      const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
       if (snap.exists()) {
         const data = snap.data();
         setProfile(data);
         setPrivateAccount(data.isPrivate ?? false);
+      }
+
+      if (auth.currentUser.photoURL) {
+        setPhotoURL(auth.currentUser.photoURL);
       }
     };
 
     fetchUser();
   }, []);
 
-  // 🔹 Toggle Private Account (Firestore-backed)
+  /* ================= PHOTO UPLOAD ================= */
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !auth.currentUser) return;
+
+    try {
+      setUploading(true);
+
+      const imageRef = ref(
+        storage,
+        `profilePhotos/${auth.currentUser.uid}`
+      );
+
+      await uploadBytes(imageRef, file);
+      const downloadURL = await getDownloadURL(imageRef);
+
+      await updateProfile(auth.currentUser, {
+        photoURL: downloadURL,
+      });
+
+      setPhotoURL(downloadURL);
+    } catch (err) {
+      console.error("Profile photo upload failed", err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /* ================= PRIVACY ================= */
+
   const togglePrivateAccount = async () => {
     if (!auth.currentUser) return;
 
@@ -65,6 +103,8 @@ export default function Settings() {
       isPrivate: newValue,
     });
   };
+
+  /* ================= AUTH ================= */
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -78,18 +118,19 @@ export default function Settings() {
     const confirmDelete = window.confirm(
       "Are you sure you want to permanently delete your account?"
     );
-
     if (!confirmDelete) return;
 
     try {
       await deleteDoc(doc(db, "users", user.uid));
       await deleteUser(user);
       navigate("/login");
-    } catch (error) {
+    } catch {
       alert("Please login again to delete your account.");
       navigate("/login");
     }
   };
+
+  /* ================= UI HELPERS ================= */
 
   const SettingItem = ({ icon: Icon, title, subtitle, onClick }) => (
     <button
@@ -121,10 +162,37 @@ export default function Settings() {
       {/* PROFILE */}
       <div className="mb-8 p-6 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold">
-            {profile?.fullName?.charAt(0) || "U"}
+
+          {/* PHOTO */}
+          <div className="relative">
+            <label htmlFor="photoUpload" className="cursor-pointer">
+              {photoURL ? (
+                <img
+                  src={photoURL}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold">
+                  {profile?.fullName?.charAt(0) || "U"}
+                </div>
+              )}
+
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                <span className="text-xs">Edit</span>
+              </div>
+            </label>
+
+            <input
+              id="photoUpload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
           </div>
 
+          {/* INFO */}
           <div className="flex-1">
             <h3 className="text-xl font-semibold">
               {profile?.fullName || "User"}
@@ -132,6 +200,9 @@ export default function Settings() {
             <p className="text-gray-400 text-sm">
               {auth.currentUser?.email}
             </p>
+            {uploading && (
+              <p className="text-xs text-gray-500">Uploading photo…</p>
+            )}
           </div>
 
           <button
@@ -210,7 +281,6 @@ export default function Settings() {
             subtitle="Review our terms"
           />
         </Link>
-
         <Link to="/privacy">
           <SettingItem
             icon={FileText}
