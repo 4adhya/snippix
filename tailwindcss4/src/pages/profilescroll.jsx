@@ -93,7 +93,6 @@ const getSpreadPosition = (index) => {
 
 /* ---------------- PROFILE CARD ---------------- */
 function ProfileCard({ profile, isExpanded, isHidden, onToggle }) {
-  // Completely hide other profiles from the DOM when one is expanded
   if (isHidden) return null;
 
   return (
@@ -120,7 +119,7 @@ function ProfileCard({ profile, isExpanded, isHidden, onToggle }) {
           <span className="text-5xl font-black">{profile.initials}</span>
         </motion.div>
 
-        <motion.h2 layout className="text-3xl font-black mb-2 drop-shadow-md">
+        <motion.h2 layout className="text-3xl font-black mb-2">
           {profile.name}
         </motion.h2>
 
@@ -142,7 +141,7 @@ function ProfileCard({ profile, isExpanded, isHidden, onToggle }) {
                 key={i}
                 src={img}
                 className="absolute w-52 h-52 rounded-xl object-cover border-4 border-white shadow-2xl z-[60]"
-                initial={{ scale: 0, opacity: 0, x: 0, y: 0 }}
+                initial={{ scale: 0, opacity: 0 }}
                 animate={{
                   scale: 1,
                   opacity: 1,
@@ -151,11 +150,11 @@ function ProfileCard({ profile, isExpanded, isHidden, onToggle }) {
                   rotate: pos.rotate,
                 }}
                 exit={{ scale: 0, opacity: 0 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 120, 
+                transition={{
+                  type: "spring",
+                  stiffness: 120,
                   damping: 15,
-                  delay: i * 0.05 
+                  delay: i * 0.05,
                 }}
                 style={{
                   left: "50%",
@@ -179,30 +178,35 @@ export default function ProfileScroll() {
 
   useEffect(() => {
     const fetchProfiles = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, "users"));
-        const users = snapshot.docs.map((doc, index) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            name: data.fullName || "User",
-            role: data.role || "Creator",
-            initials: data.initials || (data.fullName ? data.fullName.split(" ").map(n => n[0]).join("").toUpperCase() : "U"),
-            gradient: [
-              "from-purple-500 via-pink-500 to-red-500",
-              "from-blue-500 via-cyan-500 to-teal-500",
-              "from-green-500 via-emerald-500 to-teal-500",
-              "from-orange-500 via-amber-500 to-yellow-500",
-              "from-indigo-500 via-purple-500 to-pink-500",
-            ][index % 5],
-            collages: data.collages || [],
-          };
-        });
-        setProfiles(users);
-      } catch (err) {
-        console.error("Error fetching profiles:", err);
-      }
+      const snapshot = await getDocs(collection(db, "users"));
+      const users = snapshot.docs.map((doc, index) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.fullName || "User",
+          role: data.role || "Creator",
+          initials:
+            data.initials ||
+            (data.fullName
+              ? data.fullName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+              : "U"),
+          gradient: [
+            "from-purple-500 via-pink-500 to-red-500",
+            "from-blue-500 via-cyan-500 to-teal-500",
+            "from-green-500 via-emerald-500 to-teal-500",
+            "from-orange-500 via-amber-500 to-yellow-500",
+            "from-indigo-500 via-purple-500 to-pink-500",
+          ][index % 5],
+          collages: data.collages || [],
+        };
+      });
+      setProfiles(users);
     };
+
     fetchProfiles();
   }, []);
 
@@ -210,7 +214,7 @@ export default function ProfileScroll() {
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       <BackgroundWave />
 
-      {/* NAVIGATION CONTROLS */}
+      {/* EXPANDED MODE CONTROLS */}
       <AnimatePresence>
         {expandedId && (
           <motion.div
@@ -221,13 +225,14 @@ export default function ProfileScroll() {
           >
             <button
               onClick={() => setExpandedId(null)}
-              className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all"
+              className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20"
             >
               <ArrowLeft size={24} />
             </button>
+
             <button
               onClick={() => setExpandedId(null)}
-              className="p-3 rounded-full bg-red-500/80 backdrop-blur-md border border-white/20 hover:bg-red-600 transition-all"
+              className="p-3 rounded-full bg-red-500/80 backdrop-blur-md border border-white/20 hover:bg-red-600"
             >
               <X size={24} />
             </button>
@@ -235,20 +240,32 @@ export default function ProfileScroll() {
         )}
       </AnimatePresence>
 
-      <div className="max-w-7xl mx-auto py-24 px-6 relative">
+      <div className="max-w-7xl mx-auto py-24 px-6">
+
+        {/* HEADER WITH BACK (NON-EXPANDED) */}
         <AnimatePresence mode="wait">
           {!expandedId && (
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-6xl font-black text-center mb-20 tracking-tighter"
+              className="relative mb-20"
             >
-              CREATIVE PROFILES
-            </motion.h1>
+              <button
+                onClick={() => navigate(-1)}
+                className="absolute left-0 top-1 p-4 rounded-full hover:bg-white/10"
+              >
+                <ArrowLeft size={30} />
+              </button>
+
+              <h1 className="text-6xl font-black text-center tracking-tighter">
+                CREATIVE PROFILES
+              </h1>
+            </motion.div>
           )}
         </AnimatePresence>
 
+        {/* GRID */}
         <div
           className={`grid gap-8 transition-all duration-500 ${
             expandedId
