@@ -5,12 +5,16 @@ import {
   RotateCw,
   ZoomIn,
   ZoomOut,
-  Download
+  Download,
+  ArrowLeft,
 } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 export default function CollageMaker() {
+  const navigate = useNavigate();
+
   const [images, setImages] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [draggedId, setDraggedId] = useState(null);
@@ -35,7 +39,7 @@ export default function CollageMaker() {
           width: 220,
           height: 260,
           rotation: randomRotation,
-          zIndex: images.length
+          zIndex: images.length,
         };
 
         setImages((prev) => [...prev, newImage]);
@@ -73,9 +77,7 @@ export default function CollageMaker() {
   const rotateImage = (id) => {
     setImages((prev) =>
       prev.map((img) =>
-        img.id === id
-          ? { ...img, rotation: img.rotation + 15 }
-          : img
+        img.id === id ? { ...img, rotation: img.rotation + 15 } : img
       )
     );
   };
@@ -87,7 +89,7 @@ export default function CollageMaker() {
           ? {
               ...img,
               width: Math.max(120, img.width * scale),
-              height: Math.max(150, img.height * scale)
+              height: Math.max(150, img.height * scale),
             }
           : img
       )
@@ -153,7 +155,7 @@ export default function CollageMaker() {
     );
   };
 
-  /* ================= SAVE TO FIRESTORE ================= */
+  /* ================= SAVE ================= */
   const saveSnippix = async () => {
     if (!images.length) return;
 
@@ -167,7 +169,7 @@ export default function CollageMaker() {
       await addDoc(collection(db, "snippix"), {
         userId: user.uid,
         images: images.map(({ id, ...rest }) => rest),
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
 
       alert("Snippix saved 🤍");
@@ -179,17 +181,28 @@ export default function CollageMaker() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-gray-800">
-      {/* HEADER */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <h1 className="text-4xl font-serif mb-2">
+
+      {/* ================= HEADER ================= */}
+      <div className="relative max-w-6xl mx-auto px-6 py-8">
+
+        {/* BACK ARROW */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute left-6 top-8 p-3 rounded-full hover:bg-black/5 transition"
+        >
+          <ArrowLeft size={28} />
+        </button>
+
+        {/* TITLE */}
+        <h1 className="text-4xl font-serif text-center mb-2">
           Create your Snippix
         </h1>
-        <p className="text-gray-500">
+        <p className="text-gray-500 text-center">
           A quiet space to collect moments.
         </p>
       </div>
 
-      {/* TOOLBAR */}
+      {/* ================= TOOLBAR ================= */}
       <div className="max-w-6xl mx-auto px-6 mb-6 flex flex-wrap gap-3 items-center">
         <button
           onClick={() => fileInputRef.current.click()}
@@ -259,7 +272,7 @@ export default function CollageMaker() {
         />
       </div>
 
-      {/* CANVAS */}
+      {/* ================= CANVAS ================= */}
       <div
         ref={canvasRef}
         className="relative max-w-6xl mx-auto bg-[#fdfdfd] border rounded-2xl shadow-inner overflow-hidden"
@@ -282,7 +295,7 @@ export default function CollageMaker() {
               width: img.width,
               height: img.height + 30,
               transform: `rotate(${img.rotation}deg)`,
-              zIndex: img.zIndex
+              zIndex: img.zIndex,
             }}
           >
             <div className="bg-white p-2 pb-6 shadow-lg rounded-sm">
