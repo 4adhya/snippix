@@ -3,23 +3,23 @@ import worldData from "../data/world.geo.json";
 
 export default function WorldMap({ onHover, onSelect, dimmed }) {
   const projection = geoNaturalEarth1()
-    .scale(165) // Slightly increased for better visibility
+    .scale(165)
     .translate([500, 260]);
 
   const pathGenerator = geoPath().projection(projection);
 
   return (
-    <svg 
-      viewBox="0 0 1000 520" 
+    <svg
+      viewBox="0 0 1000 520"
       className="w-[95%] max-w-6xl transition-all duration-700"
       style={{ filter: dimmed ? "grayscale(100%) opacity(0.3)" : "none" }}
     >
       {worldData.features.map((feature, index) => {
         const name = feature.properties.ADMIN || feature.properties.name;
-        const code = feature.properties.ISO_A2 || feature.properties.iso_a3;
+        const code = feature.properties.ISO_A2 || feature.properties.iso_a2;
 
-        // SAFE UNIQUE KEY
-        const key = code && code !== "-1" ? code : `${name}-${index}`;
+        const key =
+          code && code !== "-1" ? code : `${name}-${index}`;
 
         return (
           <path
@@ -33,14 +33,11 @@ export default function WorldMap({ onHover, onSelect, dimmed }) {
             onMouseLeave={() => onHover(null)}
             onClick={() =>
               onSelect({
-                code,
                 name,
+                code,
               })
             }
-            style={{ 
-              cursor: "pointer", 
-              outline: "none" 
-            }}
+            style={{ cursor: "pointer", outline: "none" }}
           />
         );
       })}

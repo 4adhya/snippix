@@ -2,18 +2,32 @@ import { geoNaturalEarth1, geoPath } from "d3-geo";
 import worldData from "../data/world.geo.json";
 import cities from "../data/cities.json";
 
-export default function CountrySideFocus({ country, side = "right", onClose }) {
+export default function CountrySideFocus({
+  country,
+  side = "right",
+  onClose,
+}) {
+  // ✅ MATCH EXACT SAME FEATURE AS WorldMap
   const countryFeature = worldData.features.find(
     (f) =>
-      f.properties?.ISO_A2 === country.code ||
-      f.properties?.iso_a2 === country.code ||
-      f.id === country.code
+      f.properties?.ADMIN === country.name ||
+      f.properties?.name === country.name
   );
 
   if (!countryFeature) return null;
 
-  const projection = geoNaturalEarth1().fitSize([260, 260], countryFeature);
+  // ✅ FIT COUNTRY PERFECTLY INSIDE RING
+  const projection = geoNaturalEarth1();
+  projection.fitExtent(
+    [
+      [10, 10],
+      [250, 250],
+    ],
+    countryFeature
+  );
+
   const pathGenerator = geoPath().projection(projection);
+
   const cityList = cities[country.code] || [];
 
   return (
@@ -55,7 +69,7 @@ export default function CountrySideFocus({ country, side = "right", onClose }) {
           />
         </svg>
 
-        {/* MAP */}
+        {/* COUNTRY MAP */}
         <svg
           width={260}
           height={260}
