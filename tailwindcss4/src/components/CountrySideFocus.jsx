@@ -42,7 +42,7 @@ export default function CountrySideFocus({
   if (!countryFeature || !projection) return null;
 
   // 3. Get city list from your JSON
-  const cityList = cities[country.code] || [];
+  const cityList = cities[country.name] || [];
 
   return (
     <div
