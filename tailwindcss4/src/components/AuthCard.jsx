@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { registerUser, loginUser, db } from "../firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { registerUser, loginUser, auth, db } from "../firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { sendEmailVerification } from "firebase/auth";
+import { useUser } from "../context/UserContext";
 
 export default function AuthCard({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -10,6 +11,7 @@ export default function AuthCard({ onAuthSuccess }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState(""); // ✅ NEW
   const [password, setPassword] = useState("");
+  const { setUser } = useUser();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,6 +50,14 @@ export default function AuthCard({ onAuthSuccess }) {
           alert("Please verify your email before continuing.");
           return;
         }
+        const uid=user.uid;
+        const userDoc = await getDoc(doc(db, "users", uid)); 
+        setUser({
+          uid,
+          username: userDoc.data().username,
+          fullName: userDoc.data().fullName,
+          email: userDoc.data().email,
+        });
       }
 
       onAuthSuccess();
