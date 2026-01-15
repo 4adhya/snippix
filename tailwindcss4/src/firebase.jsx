@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -15,10 +16,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCu10zr3U6kXNIaxMYQtHjMFzi-kkTQrVA",
   authDomain: "snippix-d86db.firebaseapp.com",
   projectId: "snippix-d86db",
-
-  // ✅ FIXED (VERY IMPORTANT)
   storageBucket: "snippix-d86db.appspot.com",
-
   messagingSenderId: "187852135764",
   appId: "1:187852135764:web:0e0ee5fc60cbe88cac3cc1",
 };
@@ -35,13 +33,13 @@ export const storage = getStorage(app);
 // AUTH HELPERS
 // ----------------------------
 
-// Create user (Signup) using username → internal email
+// Signup using username → internal email
 export const registerUser = (username, password) => {
-  const email = `${username}@snippix.app`; // Firebase requires email format
+  const email = `${username}@snippix.app`;
   return createUserWithEmailAndPassword(auth, email, password);
 };
 
-// Login user using username → internal email
+// Login using username → internal email
 export const loginUser = (username, password) => {
   const email = `${username}@snippix.app`;
   return signInWithEmailAndPassword(auth, email, password);

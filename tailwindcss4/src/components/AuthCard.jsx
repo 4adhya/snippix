@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { registerUser, loginUser, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
-
+import { sendEmailVerification } from "firebase/auth";
 
 export default function AuthCard({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -10,36 +10,54 @@ export default function AuthCard({ onAuthSuccess }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    if (isSignUp) {
-      // SIGN UP FLOW
-      const userCred = await registerUser(username, password);
-      const user = userCred.user;
+    try {
+      if (isSignUp) {
+        // =====================
+        // SIGN UP FLOW
+        // =====================
+        const userCred = await registerUser(username, password);
+        const user = userCred.user;
 
-      await setDoc(doc(db, "users", user.uid), {
-        fullName: fullName,
-        username: username,
-        createdAt: Date.now(),
-      });
+        // 🔥 SEND VERIFICATION EMAIL
+        await sendEmailVerification(user);
 
-      console.log("User signed up:", user.uid);
-    } else {
-      // LOGIN FLOW
-      const userCred = await loginUser(username, password);
-      console.log("User logged in:", userCred.user.uid);
+        await setDoc(doc(db, "users", user.uid), {
+          fullName: fullName,
+          username: username,
+          createdAt: Date.now(),
+        });
+
+        alert("Verification email sent. Please verify before logging in.");
+        return; // ⛔ do NOT enter app until verified
+      } else {
+        // =====================
+        // LOGIN FLOW
+        // =====================
+        const userCred = await loginUser(username, password);
+        const user = userCred.user;
+
+        // 🔁 Refresh auth state
+        await user.reload();
+
+        // ⛔ BLOCK UNVERIFIED USERS
+        if (!user.emailVerified) {
+          alert("Please verify your email before continuing.");
+          return;
+        }
+
+        console.log("User logged in:", user.uid);
+      }
+
+      // ✅ Only verified users reach here
+      onAuthSuccess();
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
     }
-
-    onAuthSuccess(); // Go forward after success
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
-};
-
+  };
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-transparent">
@@ -69,7 +87,8 @@ export default function AuthCard({ onAuthSuccess }) {
 
         {/* Forms Container (moves horizontally) */}
         <div className="relative z-10 w-full flex">
-          {/* Sign In Form */}
+
+          {/* ---------------- SIGN IN FORM ---------------- */}
           <motion.div
             key="signin"
             animate={{ x: isSignUp ? "-100%" : "0%" }}
@@ -111,6 +130,7 @@ export default function AuthCard({ onAuthSuccess }) {
                     Sign In
                   </button>
                 </form>
+
                 <div className="text-sm text-center mt-4">
                   <button className="text-gray-600 hover:underline">
                     Forgot password?
@@ -120,7 +140,7 @@ export default function AuthCard({ onAuthSuccess }) {
             )}
           </motion.div>
 
-          {/* Sign Up Form (Create Account) */}
+          {/* ---------------- SIGN UP FORM ---------------- */}
           <motion.div
             key="signup"
             animate={{ x: isSignUp ? "-100%" : "0%" }}
@@ -139,13 +159,13 @@ export default function AuthCard({ onAuthSuccess }) {
                   Create Account
                 </h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
 
                   <input
                     type="text"
@@ -173,6 +193,7 @@ export default function AuthCard({ onAuthSuccess }) {
               </motion.div>
             )}
           </motion.div>
+
         </div>
       </div>
     </div>
