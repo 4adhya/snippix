@@ -7,7 +7,7 @@ import Home from "./pages/home.jsx";
 import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
-import CollageMaker from "./pages/collage";
+import CollageMaker from "./pages/CreateSnippix.jsx";
 import SetupProfile from "./pages/SetupProfile";
 import DMChat from "./pages/DMChat";
 import Chat from "./pages/Chat";
