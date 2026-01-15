@@ -8,6 +8,7 @@ export default function AuthCard({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState(""); // ✅ NEW
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
@@ -18,40 +19,37 @@ export default function AuthCard({ onAuthSuccess }) {
         // =====================
         // SIGN UP FLOW
         // =====================
-        const userCred = await registerUser(username, password);
+        const userCred = await registerUser(email, password);
         const user = userCred.user;
 
         // 🔥 SEND VERIFICATION EMAIL
         await sendEmailVerification(user);
 
+        // Store profile
         await setDoc(doc(db, "users", user.uid), {
-          fullName: fullName,
-          username: username,
+          fullName,
+          username,
+          email,
           createdAt: Date.now(),
         });
 
         alert("Verification email sent. Please verify before logging in.");
-        return; // ⛔ do NOT enter app until verified
+        return; // ⛔ block access until verified
       } else {
         // =====================
         // LOGIN FLOW
         // =====================
-        const userCred = await loginUser(username, password);
+        const userCred = await loginUser(email, password);
         const user = userCred.user;
 
-        // 🔁 Refresh auth state
         await user.reload();
 
-        // ⛔ BLOCK UNVERIFIED USERS
         if (!user.emailVerified) {
           alert("Please verify your email before continuing.");
           return;
         }
-
-        console.log("User logged in:", user.uid);
       }
 
-      // ✅ Only verified users reach here
       onAuthSuccess();
     } catch (err) {
       console.error(err);
@@ -85,12 +83,11 @@ export default function AuthCard({ onAuthSuccess }) {
           </button>
         </motion.div>
 
-        {/* Forms Container (moves horizontally) */}
+        {/* Forms */}
         <div className="relative z-10 w-full flex">
 
-          {/* ---------------- SIGN IN FORM ---------------- */}
+          {/* SIGN IN */}
           <motion.div
-            key="signin"
             animate={{ x: isSignUp ? "-100%" : "0%" }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
             className="w-1/2 flex items-center justify-center p-8"
@@ -99,20 +96,20 @@ export default function AuthCard({ onAuthSuccess }) {
               <motion.div
                 initial={{ opacity: 0, x: -100 }}
                 animate={{ opacity: 1, x: 400 }}
-                exit={{ opacity: 0, x: 100 }}
                 transition={{ duration: 0.5 }}
                 className="w-full"
               >
-                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+                <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">
                   Welcome Back
                 </h2>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                   <input
@@ -120,29 +117,22 @@ export default function AuthCard({ onAuthSuccess }) {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                   <button
                     type="submit"
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-xl transition"
+                    className="w-full bg-blue-500 text-white py-2 rounded-xl"
                   >
                     Sign In
                   </button>
                 </form>
-
-                <div className="text-sm text-center mt-4">
-                  <button className="text-gray-600 hover:underline">
-                    Forgot password?
-                  </button>
-                </div>
               </motion.div>
             )}
           </motion.div>
 
-          {/* ---------------- SIGN UP FORM ---------------- */}
+          {/* SIGN UP */}
           <motion.div
-            key="signup"
             animate={{ x: isSignUp ? "-100%" : "0%" }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
             className="w-1/2 flex items-center justify-center p-8"
@@ -151,20 +141,20 @@ export default function AuthCard({ onAuthSuccess }) {
               <motion.div
                 initial={{ opacity: 0, x: -100 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 100 }}
                 transition={{ duration: 0.5 }}
                 className="w-full"
               >
-                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+                <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">
                   Create Account
                 </h2>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <input
                     type="text"
                     placeholder="Full Name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                   <input
@@ -172,7 +162,15 @@ export default function AuthCard({ onAuthSuccess }) {
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                   <input
@@ -180,12 +178,12 @@ export default function AuthCard({ onAuthSuccess }) {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                   <button
                     type="submit"
-                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 rounded-xl transition"
+                    className="w-full bg-sky-500 text-white py-2 rounded-xl"
                   >
                     Sign Up
                   </button>
