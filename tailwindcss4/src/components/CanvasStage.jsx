@@ -1,5 +1,5 @@
 import { Stage, Layer, Transformer } from "react-konva";
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import DraggableImage from "./DraggableImage";
 import DraggableText from "./DraggableText";
 
@@ -12,23 +12,26 @@ export default function CanvasStage({
   const trRef = useRef();
 
   useEffect(() => {
-    if (!trRef.current) return;
-    const stage = trRef.current.getStage();
-    const selectedNode = stage.findOne(`#${selectedId}`);
-    if (selectedNode) {
-      trRef.current.nodes([selectedNode]);
+    const stage = trRef.current?.getStage();
+    const node = stage?.findOne(`#${selectedId}`);
+    if (node) {
+      trRef.current.nodes([node]);
     } else {
       trRef.current.nodes([]);
     }
-    trRef.current.getLayer().batchDraw();
+    trRef.current?.getLayer()?.batchDraw();
   }, [selectedId]);
 
   return (
     <Stage
-      width={window.innerWidth - 220}
+      width={window.innerWidth - 240}
       height={window.innerHeight}
-      onMouseDown={() => setSelectedId(null)}
       style={{ background: "#fff" }}
+      onMouseDown={e => {
+        if (e.target === e.target.getStage()) {
+          setSelectedId(null);
+        }
+      }}
     >
       <Layer>
         {elements.map(el =>
@@ -36,32 +39,31 @@ export default function CanvasStage({
             <DraggableImage
               key={el.id}
               element={el}
-              isSelected={el.id === selectedId}
               onSelect={() => setSelectedId(el.id)}
-              onChange={newAttrs => {
+              onChange={newAttrs =>
                 setElements(prev =>
                   prev.map(item =>
                     item.id === el.id ? newAttrs : item
                   )
-                );
-              }}
+                )
+              }
             />
           ) : (
             <DraggableText
               key={el.id}
               element={el}
-              isSelected={el.id === selectedId}
               onSelect={() => setSelectedId(el.id)}
-              onChange={newAttrs => {
+              onChange={newAttrs =>
                 setElements(prev =>
                   prev.map(item =>
                     item.id === el.id ? newAttrs : item
                   )
-                );
-              }}
+                )
+              }
             />
           )
         )}
+
         <Transformer
           ref={trRef}
           rotateEnabled
