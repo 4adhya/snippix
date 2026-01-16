@@ -1,11 +1,6 @@
 import { Text } from "react-konva";
 
-export default function DraggableText({
-  element,
-  isSelected,
-  onSelect,
-  onChange
-}) {
+export default function DraggableText({ element, onSelect, onChange }) {
   return (
     <Text
       id={element.id}
@@ -16,6 +11,7 @@ export default function DraggableText({
       rotation={element.rotation}
       draggable
       onClick={onSelect}
+      onTap={onSelect}
       onDragEnd={e => {
         onChange({
           ...element,

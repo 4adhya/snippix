@@ -1,10 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import NotebookImage from "../components/NotebookImage";
 
 export default function CreateSnippix() {
   const [elements, setElements] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
   const fileRef = useRef(null);
 
+  // ➕ ADD IMAGE
   const addImage = (file) => {
     if (!file) return;
     const url = URL.createObjectURL(file);
@@ -24,19 +26,35 @@ export default function CreateSnippix() {
     ]);
   };
 
+  // ✏️ UPDATE ELEMENT
   const updateElement = (id, updates) => {
     setElements((prev) =>
       prev.map((el) => (el.id === id ? { ...el, ...updates } : el))
     );
   };
 
-  const deleteElement = (id) => {
-    setElements((prev) => prev.filter((el) => el.id !== id));
+  // 🗑 DELETE SELECTED
+  const deleteSelected = () => {
+    if (!selectedId) return;
+    setElements((prev) => prev.filter((el) => el.id !== selectedId));
+    setSelectedId(null);
   };
+
+  // ⌨️ KEYBOARD DELETE
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Delete" || e.key === "Backspace") {
+        deleteSelected();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [selectedId]);
 
   return (
     <div className="min-h-screen bg-[#f2f2f2] flex flex-col items-center py-8">
-      {/* Toolbar */}
+      
+      {/* TOOLBAR */}
       <div className="mb-5 flex gap-3">
         <button
           onClick={() => fileRef.current.click()}
@@ -44,6 +62,17 @@ export default function CreateSnippix() {
         >
           Add Image
         </button>
+
+        <button
+          onClick={deleteSelected}
+          disabled={!selectedId}
+          className={`px-4 py-2 rounded text-white ${
+            selectedId ? "bg-red-600" : "bg-gray-400 cursor-not-allowed"
+          }`}
+        >
+          Delete
+        </button>
+
         <input
           ref={fileRef}
           type="file"
@@ -53,43 +82,49 @@ export default function CreateSnippix() {
         />
       </div>
 
-      {/* Open Notebook */}
+      {/* NOTEBOOK */}
       <div className="flex gap-6">
+        
         {/* LEFT PAGE */}
-        <NotebookPage>
+        <NotebookPage onClick={() => setSelectedId(null)}>
           {elements
             .filter((el) => el.page === "left")
             .map((el) => (
               <NotebookImage
                 key={el.id}
                 element={el}
+                isSelected={el.id === selectedId}
+                onSelect={() => setSelectedId(el.id)}
                 onUpdate={updateElement}
-                onDelete={deleteElement}
               />
             ))}
         </NotebookPage>
 
         {/* RIGHT PAGE */}
-        <NotebookPage>
+        <NotebookPage onClick={() => setSelectedId(null)}>
           {elements
             .filter((el) => el.page === "right")
             .map((el) => (
               <NotebookImage
                 key={el.id}
                 element={el}
+                isSelected={el.id === selectedId}
+                onSelect={() => setSelectedId(el.id)}
                 onUpdate={updateElement}
-                onDelete={deleteElement}
               />
             ))}
         </NotebookPage>
+
       </div>
     </div>
   );
 }
 
-function NotebookPage({ children }) {
+/* 📖 NOTEBOOK PAGE */
+function NotebookPage({ children, onClick }) {
   return (
     <div
+      onClick={onClick}
       className="relative w-[420px] h-[594px] bg-[#fffdf7]
                  shadow-[0_8px_30px_rgba(0,0,0,0.08)]
                  rounded-[2px] px-6 py-8"

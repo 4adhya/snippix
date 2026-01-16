@@ -1,12 +1,7 @@
 import { Image } from "react-konva";
 import useImage from "use-image";
 
-export default function DraggableImage({
-  element,
-  isSelected,
-  onSelect,
-  onChange
-}) {
+export default function DraggableImage({ element, onSelect, onChange }) {
   const [image] = useImage(element.src);
 
   return (
@@ -32,7 +27,6 @@ export default function DraggableImage({
         const node = e.target;
         const scaleX = node.scaleX();
         const scaleY = node.scaleY();
-
         node.scaleX(1);
         node.scaleY(1);
 
@@ -41,8 +35,8 @@ export default function DraggableImage({
           x: node.x(),
           y: node.y(),
           rotation: node.rotation(),
-          width: Math.max(20, node.width() * scaleX),
-          height: Math.max(20, node.height() * scaleY)
+          width: Math.max(30, node.width() * scaleX),
+          height: Math.max(30, node.height() * scaleY)
         });
       }}
     />
