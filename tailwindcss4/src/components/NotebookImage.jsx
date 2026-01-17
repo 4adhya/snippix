@@ -1,14 +1,14 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
-export default function NotebookImage({ element, onUpdate, onDelete }) {
+export default function NotebookImage({ element, isSelected, onSelect, onUpdate }) {
   const dragging = useRef(false);
   const resizing = useRef(false);
   const start = useRef({});
-  const [selected, setSelected] = useState(false);
 
+  // Triggered when clicking to drag
   const onMouseDown = (e) => {
     e.stopPropagation();
-    setSelected(true);
+    onSelect();
     dragging.current = true;
 
     start.current = {
@@ -24,7 +24,6 @@ export default function NotebookImage({ element, onUpdate, onDelete }) {
 
   const onDrag = (e) => {
     if (!dragging.current) return;
-
     onUpdate(element.id, {
       x: start.current.left + (e.clientX - start.current.x),
       y: start.current.top + (e.clientY - start.current.y),
@@ -34,24 +33,18 @@ export default function NotebookImage({ element, onUpdate, onDelete }) {
   const onResizeStart = (e) => {
     e.stopPropagation();
     resizing.current = true;
-
     start.current = {
       x: e.clientX,
       width: element.width,
     };
-
     window.addEventListener("mousemove", onResize);
     window.addEventListener("mouseup", stopActions);
   };
 
   const onResize = (e) => {
     if (!resizing.current) return;
-
     onUpdate(element.id, {
-      width: Math.max(
-        80,
-        start.current.width + (e.clientX - start.current.x)
-      ),
+      width: Math.max(50, start.current.width + (e.clientX - start.current.x)),
     });
   };
 
@@ -61,12 +54,6 @@ export default function NotebookImage({ element, onUpdate, onDelete }) {
     window.removeEventListener("mousemove", onDrag);
     window.removeEventListener("mousemove", onResize);
     window.removeEventListener("mouseup", stopActions);
-  };
-
-  const rotate = (deg) => {
-    onUpdate(element.id, {
-      rotation: element.rotation + deg,
-    });
   };
 
   return (
@@ -79,58 +66,27 @@ export default function NotebookImage({ element, onUpdate, onDelete }) {
         width: element.width,
         transform: `rotate(${element.rotation}deg)`,
         zIndex: element.zIndex,
+        // The selection ring matches the Paper aesthetic
+        outline: isSelected ? "2px solid #3b82f6" : "none",
+        outlineOffset: "4px",
       }}
-      className="cursor-grab"
+      className="group cursor-grab active:cursor-grabbing transition-shadow duration-200"
     >
       <img
         src={element.src}
         draggable={false}
-        className="w-full shadow-md"
+        className={`w-full select-none ${isSelected ? 'shadow-2xl' : 'shadow-md'}`}
         alt=""
       />
 
-      {/* Controls */}
-      {selected && (
-        <>
-          {/* Resize */}
-          <div
-            onMouseDown={onResizeStart}
-            className="absolute -bottom-2 -right-2 w-3 h-3 bg-black cursor-se-resize"
-          />
-
-          {/* Rotate Left */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              rotate(-5);
-            }}
-            className="absolute -top-6 left-0 text-xs bg-black text-white px-1"
-          >
-            ↺
-          </button>
-
-          {/* Rotate Right */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              rotate(5);
-            }}
-            className="absolute -top-6 left-6 text-xs bg-black text-white px-1"
-          >
-            ↻
-          </button>
-
-          {/* Delete */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(element.id);
-            }}
-            className="absolute -top-6 right-0 text-xs bg-red-600 text-white px-1"
-          >
-            ✕
-          </button>
-        </>
+      {/* Minimalist Resize Handle */}
+      {isSelected && (
+        <div
+          onMouseDown={onResizeStart}
+          className="absolute -right-2 -bottom-2 w-5 h-5 bg-white rounded-full border-2 border-blue-500 cursor-se-resize shadow-lg flex items-center justify-center"
+        >
+           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+        </div>
       )}
     </div>
   );
