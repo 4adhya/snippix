@@ -1,16 +1,21 @@
 import { useRef } from "react";
 
-export default function NotebookImage({ element, isSelected, onSelect, onUpdate }) {
+export default function NotebookImage({
+  element,
+  isSelected,
+  onSelect,
+  onUpdate,
+}) {
   const dragging = useRef(false);
   const resizing = useRef(false);
   const start = useRef({});
 
-  // Triggered when clicking to drag
+  /* ---------------- SELECT + DRAG ---------------- */
   const onMouseDown = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 🔑 CRITICAL
     onSelect();
-    dragging.current = true;
 
+    dragging.current = true;
     start.current = {
       x: e.clientX,
       y: e.clientY,
@@ -24,33 +29,40 @@ export default function NotebookImage({ element, isSelected, onSelect, onUpdate 
 
   const onDrag = (e) => {
     if (!dragging.current) return;
+
     onUpdate(element.id, {
       x: start.current.left + (e.clientX - start.current.x),
       y: start.current.top + (e.clientY - start.current.y),
     });
   };
 
+  /* ---------------- RESIZE ---------------- */
   const onResizeStart = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 🔑 CRITICAL
     resizing.current = true;
+
     start.current = {
       x: e.clientX,
       width: element.width,
     };
+
     window.addEventListener("mousemove", onResize);
     window.addEventListener("mouseup", stopActions);
   };
 
   const onResize = (e) => {
     if (!resizing.current) return;
+
     onUpdate(element.id, {
-      width: Math.max(50, start.current.width + (e.clientX - start.current.x)),
+      width: Math.max(60, start.current.width + (e.clientX - start.current.x)),
     });
   };
 
+  /* ---------------- CLEANUP ---------------- */
   const stopActions = () => {
     dragging.current = false;
     resizing.current = false;
+
     window.removeEventListener("mousemove", onDrag);
     window.removeEventListener("mousemove", onResize);
     window.removeEventListener("mouseup", stopActions);
@@ -66,27 +78,26 @@ export default function NotebookImage({ element, isSelected, onSelect, onUpdate 
         width: element.width,
         transform: `rotate(${element.rotation}deg)`,
         zIndex: element.zIndex,
-        // The selection ring matches the Paper aesthetic
-        outline: isSelected ? "2px solid #3b82f6" : "none",
-        outlineOffset: "4px",
+        outline: isSelected ? "2px dashed #6366f1" : "none",
+        outlineOffset: "6px",
       }}
-      className="group cursor-grab active:cursor-grabbing transition-shadow duration-200"
+      className="cursor-grab active:cursor-grabbing select-none"
     >
       <img
         src={element.src}
         draggable={false}
-        className={`w-full select-none ${isSelected ? 'shadow-2xl' : 'shadow-md'}`}
         alt=""
+        className="w-full block rounded-sm shadow-lg pointer-events-none"
       />
 
-      {/* Minimalist Resize Handle */}
+      {/* Resize Handle */}
       {isSelected && (
         <div
           onMouseDown={onResizeStart}
-          className="absolute -right-2 -bottom-2 w-5 h-5 bg-white rounded-full border-2 border-blue-500 cursor-se-resize shadow-lg flex items-center justify-center"
-        >
-           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-        </div>
+          className="absolute -right-2 -bottom-2 w-4 h-4 bg-white
+                     border-2 border-indigo-500 rounded-full
+                     cursor-se-resize shadow-md"
+        />
       )}
     </div>
   );
