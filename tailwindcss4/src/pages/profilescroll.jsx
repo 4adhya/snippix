@@ -84,7 +84,7 @@ export default function ProfileScroll() {
       {/* HEADER */}
       <div className="fixed top-6 left-6 z-[200]">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/home")}
           className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
         >
           <ArrowLeft size={28} className="text-white" />

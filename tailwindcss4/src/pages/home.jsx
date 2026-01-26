@@ -11,7 +11,7 @@ export default function Home() {
   const [showSearchPage, setShowSearchPage] = useState(false);
 
   const handleExplore = () => {
-    navigate("/profiles");
+    navigate("/");
   };
 
   const handleCreateSnippix = () => {

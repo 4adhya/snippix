@@ -73,9 +73,9 @@ export default function App() {
           {/* PROTECTED */}
           {authenticated && (
             <>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<ProfileScroll />} />
               <Route path="/setup-profile" element={<SetupProfile />} />
-              <Route path="/profiles" element={<ProfileScroll />} />
+              <Route path="/home" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/change-password" element={<ChangePassword />} />
