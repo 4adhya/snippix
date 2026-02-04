@@ -1,200 +1,385 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { Stage, Layer, Rect, Image as KonvaImage, Transformer } from "react-konva";
+import useImage from "use-image";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
 
-/* ---------------- CONFIG ---------------- */
-const SCROLL_COOLDOWN = 900; // ms between scroll triggers
+const PAGE_WIDTH = 440;
+const PAGE_HEIGHT = 600;
+const SPINE_WIDTH = 2;
 
-const COLOR_PALETTE = [
-  { bg: "bg-cyan-400", text: "text-black", accent: "bg-black" },
-  { bg: "bg-orange-500", text: "text-black", accent: "bg-white" },
-  { bg: "bg-green-500", text: "text-black", accent: "bg-pink-400" },
-  { bg: "bg-yellow-400", text: "text-black", accent: "bg-blue-500" },
-  { bg: "bg-red-500", text: "text-white", accent: "bg-yellow-300" },
-  { bg: "bg-purple-500", text: "text-white", accent: "bg-green-400" },
-  { bg: "bg-pink-400", text: "text-black", accent: "bg-yellow-400" },
-  { bg: "bg-blue-600", text: "text-white", accent: "bg-orange-400" },
-];
-
-export default function ProfileScroll() {
+export default function CreateSnippix() {
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState([]);
-  const [currentRow, setCurrentRow] = useState(0);
-  const scrollLock = useRef(false);
+  const [elements, setElements] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const fileRef = useRef(null);
+  const stageRef = useRef(null);
 
-  /* 1. FIREBASE DATA FETCHING */
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, "users"));
-        const users = snapshot.docs.map((doc, index) => {
-          const data = doc.data();
-          const colorTheme = COLOR_PALETTE[index % COLOR_PALETTE.length];
-          return {
-            id: doc.id,
-            name: data.fullName || "User",
-            role: data.role || "Creator",
-            bio: data.bio || "Creative professional",
-            photoURL: data.photoURL || null,
-            initials: (data.fullName || "U").split(" ").map(n => n[0]).join("").toUpperCase(),
-            colorTheme,
-          };
-        });
-        setProfiles(users);
-      } catch (error) {
-        console.error("Error fetching profiles:", error);
-      }
+  /* -------------------- HELPERS -------------------- */
+  const selectedElement = elements.find((el) => el.id === selectedId);
+
+  const updateElement = (id, updates) => {
+    setElements((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, ...updates } : el))
+    );
+  };
+
+  const deleteSelected = () => {
+    if (!selectedId) return;
+    setElements((prev) => prev.filter((el) => el.id !== selectedId));
+    setSelectedId(null);
+  };
+
+  const duplicateSelected = () => {
+    if (!selectedElement) return;
+    setElements((prev) => [
+      ...prev,
+      {
+        ...selectedElement,
+        id: Date.now(),
+        x: selectedElement.x + 20,
+        y: selectedElement.y + 20,
+        zIndex: Date.now(),
+      },
+    ]);
+  };
+
+  const rotateSelected = (deg) => {
+    if (!selectedElement) return;
+    updateElement(selectedId, {
+      rotation: (selectedElement.rotation || 0) + deg,
+    });
+  };
+
+  const bringForward = () => {
+    if (!selectedId) return;
+    updateElement(selectedId, { zIndex: Date.now() });
+  };
+
+  const sendBackward = () => {
+    if (!selectedId) return;
+    updateElement(selectedId, { zIndex: 1 });
+  };
+
+  /* -------------------- ADD IMAGE -------------------- */
+  const addImage = (file) => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+
+    // Get natural dimensions to maintain aspect ratio
+    const img = new Image();
+    img.onload = () => {
+      const aspectRatio = img.width / img.height;
+      const width = 180;
+      const height = width / aspectRatio;
+
+      setElements((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "image",
+          src: url,
+          page: "left",
+          x: 60,
+          y: 80,
+          width: width,
+          height: height,
+          rotation: (Math.random() - 0.5) * 10,
+          zIndex: Date.now(),
+        },
+      ]);
     };
-    fetchProfiles();
-  }, []);
+    img.src = url;
+  };
 
-  /* 2. GROUPING LOGIC (Memoized to prevent recalculation) */
-  const rows = useMemo(() => {
-    const result = [];
-    const tempProfiles = [...profiles];
-    let rowIndex = 0;
-    while (tempProfiles.length > 0) {
-      const size = rowIndex % 2 === 0 ? 3 : 2;
-      result.push(tempProfiles.splice(0, size));
-      rowIndex++;
+  /* -------------------- HANDLE STAGE CLICK (DESELECT) -------------------- */
+  const handleStageClick = (e) => {
+    // If clicked on empty space (not on an image), deselect
+    if (e.target === e.target.getStage()) {
+      setSelectedId(null);
     }
-    return result;
-  }, [profiles]);
+  };
 
-  /* 3. SCROLL HANDLING */
+  /* -------------------- RENDER -------------------- */
+  return (
+    <div className="min-h-screen bg-[#3d445e] flex items-center justify-center p-6">
+      
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => navigate("/home")}
+        className="fixed top-6 left-6 z-50 p-3 rounded-full bg-black/20 hover:bg-black/30 transition-colors border border-white/10 backdrop-blur-md"
+      >
+        <ArrowLeft size={24} className="text-white" />
+      </button>
+
+      {/* NOTEBOOK CONTAINER */}
+      <div className="relative">
+        {/* Shadow layers */}
+        <div className="absolute -right-4 top-2 w-full h-full bg-black/20 rounded-r-lg -z-20" />
+        <div className="absolute -right-2 top-1 w-full h-full bg-black/30 rounded-r-lg -z-10" />
+
+        {/* Main notebook */}
+        <div className="flex bg-[#fffdf7] shadow-2xl rounded-sm overflow-hidden border border-black/5">
+          
+          {/* KONVA STAGE - Both pages in one canvas for smooth dragging */}
+          <Stage
+            ref={stageRef}
+            width={PAGE_WIDTH * 2 + SPINE_WIDTH}
+            height={PAGE_HEIGHT}
+            onMouseDown={handleStageClick}
+            onTouchStart={handleStageClick}
+          >
+            <Layer>
+              {/* LEFT PAGE BACKGROUND */}
+              <Rect
+                x={0}
+                y={0}
+                width={PAGE_WIDTH}
+                height={PAGE_HEIGHT}
+                fill="#fffdf7"
+              />
+              
+              {/* RIGHT PAGE BACKGROUND */}
+              <Rect
+                x={PAGE_WIDTH + SPINE_WIDTH}
+                y={0}
+                width={PAGE_WIDTH}
+                height={PAGE_HEIGHT}
+                fill="#fffdf7"
+              />
+
+              {/* SPINE */}
+              <Rect
+                x={PAGE_WIDTH}
+                y={0}
+                width={SPINE_WIDTH}
+                height={PAGE_HEIGHT}
+                fill="rgba(0,0,0,0.1)"
+              />
+
+              {/* ELEMENTS */}
+              {elements
+                .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+                .map((el) => (
+                  <DraggableElement
+                    key={el.id}
+                    element={el}
+                    isSelected={selectedId === el.id}
+                    onSelect={() => setSelectedId(el.id)}
+                    onChange={updateElement}
+                    pageWidth={PAGE_WIDTH}
+                    spineWidth={SPINE_WIDTH}
+                  />
+                ))}
+            </Layer>
+          </Stage>
+        </div>
+      </div>
+
+      {/* -------------------- MAC-STYLE MINI DOCK -------------------- */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex items-end gap-2 px-4 py-3 rounded-2xl
+                        bg-black/40 backdrop-blur-xl
+                        shadow-[0_20px_40px_rgba(0,0,0,0.45)]
+                        border border-white/10">
+
+          <DockIcon onClick={() => fileRef.current.click()} label="Add image">
+            🖼️
+          </DockIcon>
+
+          <DockDivider />
+
+          <DockIcon onClick={duplicateSelected} disabled={!selectedId} label="Duplicate">
+            📄
+          </DockIcon>
+
+          <DockIcon onClick={() => rotateSelected(-15)} disabled={!selectedId} label="Rotate left">
+            ↺
+          </DockIcon>
+
+          <DockIcon onClick={() => rotateSelected(15)} disabled={!selectedId} label="Rotate right">
+            ↻
+          </DockIcon>
+
+          <DockDivider />
+
+          <DockIcon onClick={bringForward} disabled={!selectedId} label="Bring forward">
+            ⬆️
+          </DockIcon>
+
+          <DockIcon onClick={sendBackward} disabled={!selectedId} label="Send back">
+            ⬇️
+          </DockIcon>
+
+          <DockDivider />
+
+          <DockIcon onClick={deleteSelected} disabled={!selectedId} danger label="Delete">
+            🗑️
+          </DockIcon>
+        </div>
+      </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        hidden
+        accept="image/*"
+        onChange={(e) => addImage(e.target.files[0])}
+      />
+    </div>
+  );
+}
+
+/* -------------------- DRAGGABLE ELEMENT -------------------- */
+function DraggableElement({ element, isSelected, onSelect, onChange, pageWidth, spineWidth }) {
+  const [image] = useImage(element.src);
+  const shapeRef = useRef(null);
+  const trRef = useRef(null);
+
+  // Update transformer when selected
   useEffect(() => {
-    const handleWheel = (e) => {
-      if (scrollLock.current || rows.length === 0) return;
+    if (isSelected && trRef.current && shapeRef.current) {
+      trRef.current.nodes([shapeRef.current]);
+      trRef.current.getLayer().batchDraw();
+    }
+  }, [isSelected]);
 
-      if (Math.abs(e.deltaY) < 10) return; // Ignore micro-scrolls
-
-      scrollLock.current = true;
-      if (e.deltaY > 0) {
-        setCurrentRow((prev) => Math.min(prev + 1, rows.length - 1));
+  const handleDragMove = (e) => {
+    const node = e.target;
+    const absX = node.x(); // Absolute position in stage
+    
+    // Check if dragged to other page
+    const currentPage = element.page;
+    let newPage = currentPage;
+    let newX = element.x; // Relative to page
+    
+    if (currentPage === "left") {
+      if (absX > pageWidth + spineWidth) {
+        newPage = "right";
+        newX = absX - (pageWidth + spineWidth);
       } else {
-        setCurrentRow((prev) => Math.max(prev - 1, 0));
+        newX = absX;
       }
+    } else {
+      // Right page
+      if (absX < pageWidth) {
+        newPage = "left";
+        newX = absX;
+      } else {
+        newX = absX - (pageWidth + spineWidth);
+      }
+    }
 
-      setTimeout(() => {
-        scrollLock.current = false;
-      }, SCROLL_COOLDOWN);
-    };
+    if (newPage !== currentPage) {
+      onChange(element.id, { 
+        page: newPage,
+        x: newX,
+        y: node.y()
+      });
+    }
+  };
 
-    window.addEventListener("wheel", handleWheel, { passive: true });
-    return () => window.removeEventListener("wheel", handleWheel);
-  }, [rows.length]);
+  const handleDragEnd = (e) => {
+    const node = e.target;
+    const absX = node.x();
+    const absY = node.y();
+    
+    // Calculate relative position based on current page
+    let relativeX;
+    if (element.page === "left") {
+      relativeX = absX;
+    } else {
+      relativeX = absX - (pageWidth + spineWidth);
+    }
+    
+    onChange(element.id, {
+      x: relativeX,
+      y: absY,
+    });
+  };
+
+  // Calculate absolute position based on page
+  const absX = element.page === "left" 
+    ? element.x 
+    : pageWidth + spineWidth + element.x;
+  const absY = element.y;
+
+  if (element.type === "image" && !image) {
+    return null; // Loading
+  }
 
   return (
-    <div className="h-screen w-screen bg-black overflow-hidden relative flex items-center justify-center">
-      {/* HEADER */}
-      <div className="fixed top-6 left-6 z-[200]">
-        <button
-          onClick={() => navigate("/home")}
-          className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
-        >
-          <ArrowLeft size={28} className="text-white" />
-        </button>
-      </div>
+    <>
+      <KonvaImage
+        ref={shapeRef}
+        image={image}
+        x={absX}
+        y={absY}
+        width={element.width}
+        height={element.height}
+        rotation={element.rotation || 0}
+        draggable
+        onClick={onSelect}
+        onTap={onSelect}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+        shadowEnabled={isSelected}
+        shadowColor="rgba(0,0,0,0.3)"
+        shadowBlur={15}
+        shadowOffset={{ x: 8, y: 8 }}
+        shadowOpacity={0.4}
+      />
+      {isSelected && (
+        <Transformer
+          ref={trRef}
+          boundBoxFunc={(oldBox, newBox) => {
+            if (newBox.width < 30 || newBox.height < 30) {
+              return oldBox;
+            }
+            return newBox;
+          }}
+          anchorFill="#3b82f6"
+          anchorStroke="#fff"
+          anchorStrokeWidth={2}
+          borderStroke="#3b82f6"
+          borderStrokeWidth={2}
+          borderDash={[5, 5]}
+        />
+      )}
+    </>
+  );
+}
 
-      {/* STACK CONTAINER */}
-      <div className="relative w-full max-w-7xl h-[600px] flex items-center justify-center">
-        <AnimatePresence mode="wait">
-          {rows.length > 0 && (
-            <motion.div
-              key={currentRow} // Keying by currentRow ensures old row exits while new enters
-              initial={{ y: 400, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: -400, opacity: 0, scale: 0.9 }}
-              transition={{
-                type: "spring",
-                stiffness: 100,
-                damping: 20,
-              }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div
-                className={`flex justify-center items-center gap-8 w-full ${
-                  currentRow % 2 === 1 ? "px-32" : "px-10"
-                }`}
-              >
-                {rows[currentRow].map((profile, i) => (
-                  <motion.div
-                    key={profile.id}
-                    className="w-full max-w-[320px] aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-2xl cursor-pointer relative group"
-                    whileHover={{ y: -15, transition: { duration: 0.3 } }}
-                    onClick={() => navigate(`/profile/${profile.id}`)}
-                  >
-                    {/* CARD BODY */}
-                    <div className={`w-full h-full ${profile.colorTheme.bg} flex flex-col`}>
-                      {/* IMAGE */}
-                      <div className="h-[55%] w-full relative overflow-hidden bg-black/5">
-                        {profile.photoURL ? (
-                          <img 
-                            src={profile.photoURL} 
-                            alt={profile.name}
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className={`text-7xl font-black ${profile.colorTheme.text} opacity-20`}>
-                              {profile.initials}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+/* -------------------- DOCK ICON -------------------- */
+function DockIcon({ children, onClick, disabled, danger, label }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={label}
+      className={`
+        w-11 h-11 flex items-center justify-center
+        rounded-xl text-xl
+        transition-all duration-200 ease-out
+        ${disabled 
+          ? "opacity-25 cursor-not-allowed grayscale" 
+          : "hover:scale-125 hover:-translate-y-1 active:scale-95"
+        }
+        ${danger 
+          ? "hover:bg-red-500/30 hover:text-red-200" 
+          : "hover:bg-white/15 hover:text-white"
+        }
+        text-white/80
+      `}
+    >
+      {children}
+    </button>
+  );
+}
 
-                      {/* CONTENT */}
-                      <div className="h-[45%] p-8 flex flex-col justify-between relative">
-                        {/* Abstract Decor */}
-                        <div className={`absolute -top-10 right-8 w-20 h-20 ${profile.colorTheme.accent} rounded-full blur-2xl opacity-40 group-hover:opacity-100 transition-opacity`} />
-                        
-                        <div className="relative z-10">
-                          <h3 className={`text-3xl font-black ${profile.colorTheme.text} uppercase tracking-tighter leading-none`}>
-                            {profile.name}
-                          </h3>
-                          <p className={`text-xs font-bold mt-2 ${profile.colorTheme.text} opacity-60 uppercase tracking-[0.25em]`}>
-                            {profile.role}
-                          </p>
-                        </div>
-
-                        <div className="relative z-10 flex justify-between items-end">
-                          <p className={`text-[10px] leading-relaxed font-medium ${profile.colorTheme.text} opacity-50 uppercase max-w-[180px]`}>
-                            {profile.bio}
-                          </p>
-                          <div className={`w-10 h-10 ${profile.colorTheme.text === 'text-black' ? 'bg-black' : 'bg-white'} rounded-full flex items-center justify-center`}>
-                             <div className={`w-3 h-3 ${profile.colorTheme.text === 'text-black' ? 'bg-white' : 'bg-black'} rotate-45`} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* FOOTER INDICATOR */}
-      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
-        <div className="flex gap-2">
-          {rows.map((_, idx) => (
-            <div 
-              key={idx} 
-              className={`h-1 transition-all duration-500 ${idx === currentRow ? "w-8 bg-white" : "w-2 bg-white/20"}`} 
-            />
-          ))}
-        </div>
-        <span className="text-white/30 text-[10px] font-bold uppercase tracking-[0.4em]">
-          Row {currentRow + 1} of {rows.length}
-        </span>
-      </div>
-
-      {/* BACKGROUND EFFECTS */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_black_90%)]" />
-    </div>
+/* -------------------- DOCK DIVIDER -------------------- */
+function DockDivider() {
+  return (
+    <div className="w-[1px] h-8 bg-white/20 mx-1" />
   );
 }
