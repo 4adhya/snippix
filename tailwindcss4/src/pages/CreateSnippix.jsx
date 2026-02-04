@@ -3,6 +3,18 @@ import { Stage, Layer, Rect, Image as KonvaImage, Transformer } from "react-konv
 import useImage from "use-image";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+
+
+import { getAuth } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
+
+import {
+  blobUrlToFile,
+  compressImage,
+  uploadImageToCloudinary,
+} from "../utils/imageUpload";
 
 const PAGE_WIDTH = 440;
 const PAGE_HEIGHT = 600;
@@ -10,14 +22,18 @@ const SPINE_WIDTH = 2;
 
 export default function CreateSnippix() {
   const navigate = useNavigate();
+  const auth = getAuth();
+
   const [elements, setElements] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [saving, setSaving] = useState(false);
+
   const fileRef = useRef(null);
   const stageRef = useRef(null);
 
-  /* -------------------- HELPERS -------------------- */
   const selectedElement = elements.find((el) => el.id === selectedId);
 
+  /* -------------------- ELEMENT HELPERS -------------------- */
   const updateElement = (id, updates) => {
     setElements((prev) =>
       prev.map((el) => (el.id === id ? { ...el, ...updates } : el))
@@ -64,14 +80,14 @@ export default function CreateSnippix() {
   /* -------------------- ADD IMAGE -------------------- */
   const addImage = (file) => {
     if (!file) return;
-    const url = URL.createObjectURL(file);
 
-    // Get natural dimensions to maintain aspect ratio
+    const url = URL.createObjectURL(file);
     const img = new Image();
+
     img.onload = () => {
-      const aspectRatio = img.width / img.height;
+      const aspect = img.width / img.height;
       const width = 180;
-      const height = width / aspectRatio;
+      const height = width / aspect;
 
       setElements((prev) => [
         ...prev,
@@ -82,19 +98,105 @@ export default function CreateSnippix() {
           page: "left",
           x: 60,
           y: 80,
-          width: width,
-          height: height,
+          width,
+          height,
           rotation: (Math.random() - 0.5) * 10,
           zIndex: Date.now(),
         },
       ]);
     };
+
     img.src = url;
   };
+  /* -------------------- LOAD LAST SAVED NOTEBOOK -------------------- */
+useEffect(() => {
+  const loadLastNotebook = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
 
-  /* -------------------- HANDLE STAGE CLICK (DESELECT) -------------------- */
+    try {
+      const ref = collection(db, "users", user.uid, "notebooks");
+      const q = query(ref, orderBy("updatedAt", "desc"), limit(1));
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        const data = snap.docs[0].data();
+        if (data?.elements) {
+          setElements(data.elements);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load notebook:", err);
+    }
+  };
+
+  loadLastNotebook();
+}, []);
+
+  /* -------------------- SAVE NOTEBOOK -------------------- */
+  const saveNotebook = async () => {
+    if (saving) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please log in first");
+      return;
+    }
+
+    if (elements.length === 0) {
+      alert("Notebook is empty");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const processedElements = await Promise.all(
+        elements.map(async (el) => {
+          if (el.type !== "image") return el;
+
+          if (el.src.startsWith("https://res.cloudinary.com")) {
+            return el;
+          }
+
+          const file = await blobUrlToFile(el.src);
+          const compressed = await compressImage(file);
+          const cloudUrl = await uploadImageToCloudinary(compressed);
+
+          return { ...el, src: cloudUrl };
+        })
+      );
+
+      const notebookId = Date.now().toString();
+
+      const thumbnail =
+        processedElements.find((e) => e.type === "image")?.src || "";
+
+      await setDoc(
+        doc(db, "users", user.uid, "notebooks", notebookId),
+        {
+          id: notebookId,
+          elements: processedElements,
+          pageCount: 2,
+          thumbnail,
+          isPublic: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }
+      );
+
+      setElements(processedElements);
+      alert("Notebook saved successfully");
+    } catch (err) {
+      console.error("Save failed", err);
+      alert("Failed to save notebook");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* -------------------- DESELECT -------------------- */
   const handleStageClick = (e) => {
-    // If clicked on empty space (not on an image), deselect
     if (e.target === e.target.getStage()) {
       setSelectedId(null);
     }
@@ -103,25 +205,18 @@ export default function CreateSnippix() {
   /* -------------------- RENDER -------------------- */
   return (
     <div className="min-h-screen bg-[#3d445e] flex items-center justify-center p-6">
-      
-      {/* BACK BUTTON */}
       <button
         onClick={() => navigate("/home")}
-        className="fixed top-6 left-6 z-50 p-3 rounded-full bg-black/20 hover:bg-black/30 transition-colors border border-white/10 backdrop-blur-md"
+        className="fixed top-6 left-6 z-50 p-3 rounded-full bg-black/20 border border-white/10 backdrop-blur-md"
       >
         <ArrowLeft size={24} className="text-white" />
       </button>
 
-      {/* NOTEBOOK CONTAINER */}
       <div className="relative">
-        {/* Shadow layers */}
         <div className="absolute -right-4 top-2 w-full h-full bg-black/20 rounded-r-lg -z-20" />
         <div className="absolute -right-2 top-1 w-full h-full bg-black/30 rounded-r-lg -z-10" />
 
-        {/* Main notebook */}
         <div className="flex bg-[#fffdf7] shadow-2xl rounded-sm overflow-hidden border border-black/5">
-          
-          {/* KONVA STAGE - Both pages in one canvas for smooth dragging */}
           <Stage
             ref={stageRef}
             width={PAGE_WIDTH * 2 + SPINE_WIDTH}
@@ -130,34 +225,20 @@ export default function CreateSnippix() {
             onTouchStart={handleStageClick}
           >
             <Layer>
-              {/* LEFT PAGE BACKGROUND */}
-              <Rect
-                x={0}
-                y={0}
-                width={PAGE_WIDTH}
-                height={PAGE_HEIGHT}
-                fill="#fffdf7"
-              />
-              
-              {/* RIGHT PAGE BACKGROUND */}
+              <Rect width={PAGE_WIDTH} height={PAGE_HEIGHT} fill="#fffdf7" />
               <Rect
                 x={PAGE_WIDTH + SPINE_WIDTH}
-                y={0}
                 width={PAGE_WIDTH}
                 height={PAGE_HEIGHT}
                 fill="#fffdf7"
               />
-
-              {/* SPINE */}
               <Rect
                 x={PAGE_WIDTH}
-                y={0}
                 width={SPINE_WIDTH}
                 height={PAGE_HEIGHT}
                 fill="rgba(0,0,0,0.1)"
               />
 
-              {/* ELEMENTS */}
               {elements
                 .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
                 .map((el) => (
@@ -176,44 +257,41 @@ export default function CreateSnippix() {
         </div>
       </div>
 
-      {/* -------------------- MAC-STYLE MINI DOCK -------------------- */}
+      {/* DOCK */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex items-end gap-2 px-4 py-3 rounded-2xl
-                        bg-black/40 backdrop-blur-xl
-                        shadow-[0_20px_40px_rgba(0,0,0,0.45)]
-                        border border-white/10">
-
+        <div className="flex items-end gap-2 px-4 py-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10">
           <DockIcon onClick={() => fileRef.current.click()} label="Add image">
             🖼️
           </DockIcon>
 
           <DockDivider />
 
-          <DockIcon onClick={duplicateSelected} disabled={!selectedId} label="Duplicate">
+          <DockIcon onClick={duplicateSelected} disabled={!selectedId}>
             📄
           </DockIcon>
-
-          <DockIcon onClick={() => rotateSelected(-15)} disabled={!selectedId} label="Rotate left">
+          <DockIcon onClick={() => rotateSelected(-15)} disabled={!selectedId}>
             ↺
           </DockIcon>
-
-          <DockIcon onClick={() => rotateSelected(15)} disabled={!selectedId} label="Rotate right">
+          <DockIcon onClick={() => rotateSelected(15)} disabled={!selectedId}>
             ↻
           </DockIcon>
 
           <DockDivider />
 
-          <DockIcon onClick={bringForward} disabled={!selectedId} label="Bring forward">
+          <DockIcon onClick={bringForward} disabled={!selectedId}>
             ⬆️
           </DockIcon>
-
-          <DockIcon onClick={sendBackward} disabled={!selectedId} label="Send back">
+          <DockIcon onClick={sendBackward} disabled={!selectedId}>
             ⬇️
           </DockIcon>
 
           <DockDivider />
 
-          <DockIcon onClick={deleteSelected} disabled={!selectedId} danger label="Delete">
+          <DockIcon onClick={saveNotebook} label="Save">
+            💾
+          </DockIcon>
+
+          <DockIcon onClick={deleteSelected} disabled={!selectedId} danger>
             🗑️
           </DockIcon>
         </div>
@@ -236,7 +314,6 @@ function DraggableElement({ element, isSelected, onSelect, onChange, pageWidth, 
   const shapeRef = useRef(null);
   const trRef = useRef(null);
 
-  // Update transformer when selected
   useEffect(() => {
     if (isSelected && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
@@ -244,69 +321,10 @@ function DraggableElement({ element, isSelected, onSelect, onChange, pageWidth, 
     }
   }, [isSelected]);
 
-  const handleDragMove = (e) => {
-    const node = e.target;
-    const absX = node.x(); // Absolute position in stage
-    
-    // Check if dragged to other page
-    const currentPage = element.page;
-    let newPage = currentPage;
-    let newX = element.x; // Relative to page
-    
-    if (currentPage === "left") {
-      if (absX > pageWidth + spineWidth) {
-        newPage = "right";
-        newX = absX - (pageWidth + spineWidth);
-      } else {
-        newX = absX;
-      }
-    } else {
-      // Right page
-      if (absX < pageWidth) {
-        newPage = "left";
-        newX = absX;
-      } else {
-        newX = absX - (pageWidth + spineWidth);
-      }
-    }
-
-    if (newPage !== currentPage) {
-      onChange(element.id, { 
-        page: newPage,
-        x: newX,
-        y: node.y()
-      });
-    }
-  };
-
-  const handleDragEnd = (e) => {
-    const node = e.target;
-    const absX = node.x();
-    const absY = node.y();
-    
-    // Calculate relative position based on current page
-    let relativeX;
-    if (element.page === "left") {
-      relativeX = absX;
-    } else {
-      relativeX = absX - (pageWidth + spineWidth);
-    }
-    
-    onChange(element.id, {
-      x: relativeX,
-      y: absY,
-    });
-  };
-
-  // Calculate absolute position based on page
-  const absX = element.page === "left" 
-    ? element.x 
-    : pageWidth + spineWidth + element.x;
-  const absY = element.y;
-
-  if (element.type === "image" && !image) {
-    return null; // Loading
-  }
+  const absX =
+    element.page === "left"
+      ? element.x
+      : pageWidth + spineWidth + element.x;
 
   return (
     <>
@@ -314,72 +332,44 @@ function DraggableElement({ element, isSelected, onSelect, onChange, pageWidth, 
         ref={shapeRef}
         image={image}
         x={absX}
-        y={absY}
+        y={element.y}
         width={element.width}
         height={element.height}
         rotation={element.rotation || 0}
         draggable
         onClick={onSelect}
         onTap={onSelect}
-        onDragMove={handleDragMove}
-        onDragEnd={handleDragEnd}
-        shadowEnabled={isSelected}
-        shadowColor="rgba(0,0,0,0.3)"
-        shadowBlur={15}
-        shadowOffset={{ x: 8, y: 8 }}
-        shadowOpacity={0.4}
+        onDragEnd={(e) =>
+          onChange(element.id, {
+            x:
+              element.page === "left"
+                ? e.target.x()
+                : e.target.x() - (pageWidth + spineWidth),
+            y: e.target.y(),
+          })
+        }
       />
-      {isSelected && (
-        <Transformer
-          ref={trRef}
-          boundBoxFunc={(oldBox, newBox) => {
-            if (newBox.width < 30 || newBox.height < 30) {
-              return oldBox;
-            }
-            return newBox;
-          }}
-          anchorFill="#3b82f6"
-          anchorStroke="#fff"
-          anchorStrokeWidth={2}
-          borderStroke="#3b82f6"
-          borderStrokeWidth={2}
-          borderDash={[5, 5]}
-        />
-      )}
+      {isSelected && <Transformer ref={trRef} />}
     </>
   );
 }
 
-/* -------------------- DOCK ICON -------------------- */
+/* -------------------- DOCK UI -------------------- */
 function DockIcon({ children, onClick, disabled, danger, label }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       title={label}
-      className={`
-        w-11 h-11 flex items-center justify-center
-        rounded-xl text-xl
-        transition-all duration-200 ease-out
-        ${disabled 
-          ? "opacity-25 cursor-not-allowed grayscale" 
-          : "hover:scale-125 hover:-translate-y-1 active:scale-95"
-        }
-        ${danger 
-          ? "hover:bg-red-500/30 hover:text-red-200" 
-          : "hover:bg-white/15 hover:text-white"
-        }
-        text-white/80
-      `}
+      className={`w-11 h-11 rounded-xl text-xl ${
+        disabled ? "opacity-30" : "hover:scale-110"
+      } ${danger ? "hover:text-red-400" : "hover:text-white"} text-white/80`}
     >
       {children}
     </button>
   );
 }
 
-/* -------------------- DOCK DIVIDER -------------------- */
 function DockDivider() {
-  return (
-    <div className="w-[1px] h-8 bg-white/20 mx-1" />
-  );
+  return <div className="w-px h-8 bg-white/20 mx-1" />;
 }

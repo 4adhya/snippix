@@ -2,20 +2,22 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
+
+
 import AuthCard from "./components/AuthCard.jsx";
 import Home from "./pages/home.jsx";
 import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
 import CollageMaker from "./pages/CreateSnippix.jsx";
-import SetupProfile from "./pages/SetupProfile";
-import DMChat from "./pages/DMChat";
-import Chat from "./pages/Chat";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Help from "./pages/Help";
-import EditProfile from "./pages/EditProfile";
-import ChangePassword from "./pages/ChangePassword";
+import SetupProfile from "./pages/SetupProfile.jsx";
+import DMChat from "./pages/DMChat.jsx";
+import Chat from "./pages/Chat.jsx";
+import Terms from "./pages/Terms.jsx";
+import Privacy from "./pages/Privacy.jsx";
+import Help from "./pages/Help.jsx";
+import EditProfile from "./pages/EditProfile.jsx";
+import ChangePassword from "./pages/ChangePassword.jsx";
 
 import "./App.css";
 
@@ -43,7 +45,9 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-black">
 
-        {/* Splash animation */}
+        
+        
+
         <AnimatePresence>
           {reveal && (
             <motion.div
@@ -57,8 +61,7 @@ export default function App() {
         </AnimatePresence>
 
         <Routes>
-
-          {/* PUBLIC ROUTES */}
+          {/* PUBLIC */}
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
 
@@ -85,7 +88,6 @@ export default function App() {
               <Route path="/chat/:uid" element={<DMChat />} />
             </>
           )}
-
         </Routes>
       </div>
     </BrowserRouter>
