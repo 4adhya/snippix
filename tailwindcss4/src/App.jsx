@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import ViewNotebook from "./pages/ViewNotebook.jsx";
 
 
 
@@ -86,6 +87,7 @@ export default function App() {
               <Route path="/collage" element={<CollageMaker />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/chat/:uid" element={<DMChat />} />
+              <Route path="/notebook/:uid" element={<ViewNotebook />} />
             </>
           )}
         </Routes>

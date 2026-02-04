@@ -149,7 +149,7 @@ export default function ProfileScroll() {
                       transition={{ delay: i * 0.1 }}
                       className="w-full max-w-[300px] aspect-[3/4] rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
                       whileHover={{ y: -10, scale: 1.02 }}
-                      onClick={() => navigate(`/profile/${profile.id}`)}
+                      onClick={() => navigate(`/notebook/${profile.id}`)}
                     >
                       {/* CARD BACKGROUND */}
                       <div className={`w-full h-full ${profile.colorTheme.bg} flex flex-col`}>
