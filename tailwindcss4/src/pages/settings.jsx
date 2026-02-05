@@ -28,17 +28,12 @@ import ReportProblemModal from "../components/reportproblem.jsx";
 
 const pageVariant = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { duration: 0.35, ease: "easeOut" },
-  },
+  show: { opacity: 1, transition: { duration: 0.4 } },
 };
 
 const containerVariant = {
   hidden: {},
-  show: {
-    transition: { staggerChildren: 0.08 },
-  },
+  show: { transition: { staggerChildren: 0.08 } },
 };
 
 const itemVariant = {
@@ -67,16 +62,19 @@ export default function Settings() {
   useEffect(() => {
     const fetchUser = async () => {
       if (!auth.currentUser) return;
+
       const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
       if (snap.exists()) {
         const data = snap.data();
         setProfile(data);
         setPrivateAccount(data.isPrivate ?? false);
       }
+
       if (auth.currentUser.photoURL) {
         setPhotoURL(auth.currentUser.photoURL);
       }
     };
+
     fetchUser();
   }, []);
 
@@ -84,16 +82,13 @@ export default function Settings() {
     const file = e.target.files[0];
     if (!file || !auth.currentUser) return;
 
-    try {
-      setUploading(true);
-      const imageRef = ref(storage, `profilePhotos/${auth.currentUser.uid}`);
-      await uploadBytes(imageRef, file);
-      const downloadURL = await getDownloadURL(imageRef);
-      await updateProfile(auth.currentUser, { photoURL: downloadURL });
-      setPhotoURL(downloadURL);
-    } finally {
-      setUploading(false);
-    }
+    setUploading(true);
+    const imageRef = ref(storage, `profilePhotos/${auth.currentUser.uid}`);
+    await uploadBytes(imageRef, file);
+    const url = await getDownloadURL(imageRef);
+    await updateProfile(auth.currentUser, { photoURL: url });
+    setPhotoURL(url);
+    setUploading(false);
   };
 
   const togglePrivateAccount = async () => {
@@ -121,25 +116,20 @@ export default function Settings() {
       variants={pageVariant}
       initial="hidden"
       animate="show"
-      className="min-h-screen text-white bg-[radial-gradient(circle_at_top,_#1FAE78_0%,_#123D2B_30%,_#0B1F17_70%)] px-4 py-6"
+      className="min-h-screen animated-jade-bg text-white px-4 py-6"
     >
       {/* HEADER */}
-      <motion.div
-        variants={itemVariant}
-        className="relative mb-10 max-w-2xl mx-auto"
-      >
+      <motion.div variants={itemVariant} className="relative mb-10 max-w-2xl mx-auto">
         <button
           onClick={() => navigate(-1)}
-          className="absolute left-0 top-0 p-3 rounded-full hover:bg-white/10 transition"
+          className="absolute left-0 top-0 p-3 rounded-full hover:bg-white/10"
         >
           <ArrowLeft size={26} />
         </button>
 
         <div className="text-center">
           <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-emerald-200/70">
-            Manage your Snippix space
-          </p>
+          <p className="text-emerald-200/70">Manage your Snippix space</p>
         </div>
       </motion.div>
 
@@ -158,10 +148,10 @@ export default function Settings() {
                   <img
                     src={photoURL}
                     alt="Profile"
-                    className="w-16 h-16 rounded-full object-cover ring-2 ring-emerald-400 shadow-jade-soft"
+                    className="w-16 h-16 rounded-full object-cover ring-2 ring-emerald-400"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center font-bold shadow-jade-soft">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center font-bold">
                     {profile?.fullName?.charAt(0) || "U"}
                   </div>
                 )}
@@ -225,8 +215,9 @@ export default function Settings() {
 /* ================= COMPONENTS ================= */
 
 const GlassCard = ({ children }) => (
-  <div className="mb-6 p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-jade-soft">
-    {children}
+  <div className="group relative mb-6 p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
+    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_top,_rgba(31,174,120,0.35),_transparent_70%)]" />
+    <div className="relative z-10">{children}</div>
   </div>
 );
 
@@ -243,9 +234,10 @@ const SettingItem = ({ icon: Icon, title, subtitle }) => (
   <motion.button
     variants={itemVariant}
     whileTap={{ scale: 0.97 }}
-    className="w-full flex justify-between items-center p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
+    className="group relative w-full flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/10 overflow-hidden"
   >
-    <div className="flex gap-4 items-center">
+    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_center,_rgba(31,174,120,0.35),_transparent_70%)]" />
+    <div className="relative z-10 flex gap-4 items-center">
       <div className="p-2 rounded-lg bg-emerald-500/10">
         <Icon size={20} className="text-emerald-300" />
       </div>
@@ -254,7 +246,7 @@ const SettingItem = ({ icon: Icon, title, subtitle }) => (
         <p className="text-sm text-emerald-200/60">{subtitle}</p>
       </div>
     </div>
-    <ChevronRight className="text-emerald-300" />
+    <ChevronRight className="relative z-10 text-emerald-300" />
   </motion.button>
 );
 
@@ -271,8 +263,8 @@ const ToggleItem = ({ icon: Icon, title, value, onChange }) => (
     </div>
     <button
       onClick={onChange}
-      className={`w-11 h-6 rounded-full transition ${
-        value ? "bg-emerald-400 shadow-jade-soft" : "bg-white/20"
+      className={`w-11 h-6 rounded-full ${
+        value ? "bg-emerald-400 shadow-[0_0_12px_rgba(31,174,120,0.8)]" : "bg-white/20"
       }`}
     >
       <div

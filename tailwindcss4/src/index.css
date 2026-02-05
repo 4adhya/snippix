@@ -12,18 +12,16 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #000; /* fallback */
+  background-color: #000;
   color-scheme: dark;
 }
 
-/* Better box sizing everywhere */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* Smooth fonts (important for premium UI) */
 body {
   font-family: ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
@@ -35,65 +33,18 @@ body {
 }
 
 /* ===============================
-   JADE HORIZON GLOBAL HELPERS
+   HIDE SCROLLBAR
 ================================ */
 
-/* Glass effect base */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Soft jade glow */
-.glow-jade {
-  box-shadow: 0 0 40px rgba(31, 174, 120, 0.25);
-}
-
-/* Subtle divider line */
-.divider {
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(31, 174, 120, 0.35),
-    transparent
-  );
-}
-
-/* ===============================
-   SCROLLBAR (AESTHETIC)
-================================ */
-
-/* Hide scrollbar (horizontal or vertical) */
 .hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
-
 .hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
 }
 
 /* ===============================
-   TRANSITIONS & INTERACTIONS
-================================ */
-
-button,
-a {
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.25s ease,
-    transform 0.15s ease;
-}
-
-button:active {
-  transform: scale(0.97);
-}
-
-/* ===============================
-   SPLASH / ANIMATIONS (KEPT)
+   SPLASH ANIMATION (KEPT)
 ================================ */
 
 @keyframes fadeZoom {
@@ -113,8 +64,59 @@ button:active {
 }
 
 /* ===============================
-   OPTIONAL: SUBTLE NOISE (LUXURY)
-   (Safe to keep; barely visible)
+   ANIMATED JADE BACKGROUND
+================================ */
+
+@keyframes jadeFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-jade-bg {
+  background:
+    radial-gradient(
+      circle at top,
+      #1FAE78 0%,
+      #123D2B 35%,
+      #0B1F17 70%
+    ),
+    linear-gradient(
+      120deg,
+      rgba(31,174,120,0.15),
+      rgba(18,61,43,0.15),
+      rgba(11,31,23,0.15)
+    );
+
+  background-size: 200% 200%;
+  animation: jadeFlow 18s ease-in-out infinite;
+}
+
+/* ===============================
+   GLOBAL INTERACTIONS
+================================ */
+
+button,
+a {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.25s ease,
+    transform 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* ===============================
+   SUBTLE NOISE (PREMIUM TOUCH)
 ================================ */
 
 body::before {
