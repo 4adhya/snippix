@@ -9,7 +9,7 @@ export default function AuthCard({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState(""); // ✅ NEW
+  const [email, setEmail] = useState(""); // ⚠️ used as username during login
   const [password, setPassword] = useState("");
   const { setUser } = useUser();
 
@@ -19,29 +19,87 @@ export default function AuthCard({ onAuthSuccess }) {
     try {
       if (isSignUp) {
         // =====================
-        // SIGN UP FLOW
+        // SIGN UP FLOW (unchanged)
         // =====================
+        if (!username.trim()) {
+          alert("Username is required");
+          return;
+        }
+
+        const cleanUsername = username.trim().toLowerCase();
+
+        const usernameRef = doc(db, "usernames", cleanUsername);
+        const usernameSnap = await getDoc(usernameRef);
+
+        if (usernameSnap.exists()) {
+          alert("Username already taken. Please choose another.");
+          return;
+        }
+
         const userCred = await registerUser(email, password);
         const user = userCred.user;
+        const uid = user.uid;
 
-        // 🔥 SEND VERIFICATION EMAIL
-        await sendEmailVerification(user);
+        try {
+          await setDoc(doc(db, "users", uid), {
+            fullName,
+            username: cleanUsername,
+            email,
+            emailVerified: false,
+            createdAt: Date.now(),
+          });
 
-        // Store profile
-        await setDoc(doc(db, "users", user.uid), {
-          fullName,
-          username,
-          email,
-          createdAt: Date.now(),
-        });
+          await setDoc(doc(db, "usernames", cleanUsername), {
+            uid,
+            createdAt: Date.now(),
+          });
 
-        alert("Verification email sent. Please verify before logging in.");
-        return; // ⛔ block access until verified
+          await sendEmailVerification(user);
+
+          alert("Verification email sent. Please verify before logging in.");
+          return;
+        } catch (err) {
+          await setDoc(doc(db, "users", uid), {}, { merge: false }).catch(() => {});
+          await user.delete();
+          throw err;
+        }
+
       } else {
         // =====================
-        // LOGIN FLOW
+        // LOGIN FLOW (USERNAME-BASED)
         // =====================
-        const userCred = await loginUser(email, password);
+
+        // 1️⃣ Treat email input as username
+        const cleanUsername = email.trim().toLowerCase();
+
+        if (!cleanUsername) {
+          alert("Username is required");
+          return;
+        }
+
+        // 2️⃣ Find username → uid
+        const usernameRef = doc(db, "usernames", cleanUsername);
+        const usernameSnap = await getDoc(usernameRef);
+
+        if (!usernameSnap.exists()) {
+          alert("Invalid username or password");
+          return;
+        }
+
+        const uid = usernameSnap.data().uid;
+
+        // 3️⃣ Get user profile to retrieve email
+        const userDoc = await getDoc(doc(db, "users", uid));
+
+        if (!userDoc.exists()) {
+          alert("Account not found");
+          return;
+        }
+
+        const realEmail = userDoc.data().email;
+
+        // 4️⃣ Login using Firebase Auth
+        const userCred = await loginUser(realEmail, password);
         const user = userCred.user;
 
         await user.reload();
@@ -50,8 +108,7 @@ export default function AuthCard({ onAuthSuccess }) {
           alert("Please verify your email before continuing.");
           return;
         }
-        const uid=user.uid;
-        const userDoc = await getDoc(doc(db, "users", uid)); 
+
         setUser({
           uid,
           username: userDoc.data().username,
@@ -115,8 +172,8 @@ export default function AuthCard({ onAuthSuccess }) {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <input
-                    type="email"
-                    placeholder="Email"
+                    type="text"
+                    placeholder="Username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -141,7 +198,7 @@ export default function AuthCard({ onAuthSuccess }) {
             )}
           </motion.div>
 
-          {/* SIGN UP */}
+          {/* SIGN UP (unchanged) */}
           <motion.div
             animate={{ x: isSignUp ? "-100%" : "0%" }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
