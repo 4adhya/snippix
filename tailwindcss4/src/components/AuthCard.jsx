@@ -1,7 +1,12 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { registerUser, loginUser, auth, db } from "../firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { registerUser, loginUser, db } from "../firebase";
+import {
+  doc,
+  getDoc,
+  runTransaction,
+  serverTimestamp,
+} from "firebase/firestore";
 import { sendEmailVerification } from "firebase/auth";
 import { useUser } from "../context/UserContext";
 
@@ -9,77 +14,112 @@ export default function AuthCard({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState(""); // ⚠️ used as username during login
+  const [email, setEmail] = useState(""); // username during login
   const [password, setPassword] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState("idle");
   const { setUser } = useUser();
 
+  /* ================= USERNAME AVAILABILITY ================= */
+  useEffect(() => {
+    if (!isSignUp) return;
+
+    const cleanUsername = username.trim().toLowerCase();
+    if (!cleanUsername) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    setUsernameStatus("checking");
+
+    const timeout = setTimeout(async () => {
+      try {
+        const ref = doc(db, "usernames", cleanUsername);
+        const snap = await getDoc(ref);
+        setUsernameStatus(snap.exists() ? "taken" : "available");
+      } catch {
+        setUsernameStatus("idle");
+      }
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [username, isSignUp]);
+
+  /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      /* ============ SIGN UP ============ */
       if (isSignUp) {
-        // =====================
-        // SIGN UP FLOW (unchanged)
-        // =====================
         if (!username.trim()) {
           alert("Username is required");
           return;
         }
 
-        const cleanUsername = username.trim().toLowerCase();
+        if (usernameStatus === "checking") {
+          alert("Checking username availability...");
+          return;
+        }
 
-        const usernameRef = doc(db, "usernames", cleanUsername);
-        const usernameSnap = await getDoc(usernameRef);
-
-        if (usernameSnap.exists()) {
+        if (usernameStatus === "taken") {
           alert("Username already taken. Please choose another.");
           return;
         }
+
+        const cleanUsername = username.trim().toLowerCase();
 
         const userCred = await registerUser(email, password);
         const user = userCred.user;
         const uid = user.uid;
 
         try {
-          await setDoc(doc(db, "users", uid), {
-            fullName,
-            username: cleanUsername,
-            email,
-            emailVerified: false,
-            createdAt: Date.now(),
-          });
+          await runTransaction(db, async (tx) => {
+            const usernameRef = doc(db, "usernames", cleanUsername);
+            const userRef = doc(db, "users", uid);
 
-          await setDoc(doc(db, "usernames", cleanUsername), {
-            uid,
-            createdAt: Date.now(),
+            const snap = await tx.get(usernameRef);
+            if (snap.exists()) {
+              throw new Error("USERNAME_TAKEN");
+            }
+
+            tx.set(usernameRef, {
+              uid,
+              createdAt: serverTimestamp(),
+            });
+
+            tx.set(userRef, {
+              fullName,
+              username: cleanUsername,
+              email,
+              emailVerified: false,
+              createdAt: serverTimestamp(),
+            });
           });
 
           await sendEmailVerification(user);
-
           alert("Verification email sent. Please verify before logging in.");
           return;
         } catch (err) {
-          await setDoc(doc(db, "users", uid), {}, { merge: false }).catch(() => {});
-          await user.delete();
+          await user.delete().catch(() => {});
+          if (err.message === "USERNAME_TAKEN") {
+            alert("Username already taken. Please choose another.");
+            return;
+          }
           throw err;
         }
+      }
 
-      } else {
-        // =====================
-        // LOGIN FLOW (USERNAME-BASED)
-        // =====================
-
-        // 1️⃣ Treat email input as username
+      /* ============ LOGIN ============ */
+      else {
         const cleanUsername = email.trim().toLowerCase();
-
         if (!cleanUsername) {
           alert("Username is required");
           return;
         }
 
-        // 2️⃣ Find username → uid
-        const usernameRef = doc(db, "usernames", cleanUsername);
-        const usernameSnap = await getDoc(usernameRef);
+        const usernameSnap = await getDoc(
+          doc(db, "usernames", cleanUsername)
+        );
 
         if (!usernameSnap.exists()) {
           alert("Invalid username or password");
@@ -87,8 +127,6 @@ export default function AuthCard({ onAuthSuccess }) {
         }
 
         const uid = usernameSnap.data().uid;
-
-        // 3️⃣ Get user profile to retrieve email
         const userDoc = await getDoc(doc(db, "users", uid));
 
         if (!userDoc.exists()) {
@@ -97,8 +135,6 @@ export default function AuthCard({ onAuthSuccess }) {
         }
 
         const realEmail = userDoc.data().email;
-
-        // 4️⃣ Login using Firebase Auth
         const userCred = await loginUser(realEmail, password);
         const user = userCred.user;
 
@@ -124,11 +160,11 @@ export default function AuthCard({ onAuthSuccess }) {
     }
   };
 
+  /* ================= UI (UNCHANGED) ================= */
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-transparent">
       <div className="relative w-[800px] h-[480px] rounded-2xl shadow-2xl overflow-hidden flex bg-white">
 
-        {/* Sliding Black Panel */}
         <motion.div
           animate={{ x: isSignUp ? "100%" : "0%" }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
@@ -150,7 +186,6 @@ export default function AuthCard({ onAuthSuccess }) {
           </button>
         </motion.div>
 
-        {/* Forms */}
         <div className="relative z-10 w-full flex">
 
           {/* SIGN IN */}
@@ -198,7 +233,7 @@ export default function AuthCard({ onAuthSuccess }) {
             )}
           </motion.div>
 
-          {/* SIGN UP (unchanged) */}
+          {/* SIGN UP */}
           <motion.div
             animate={{ x: isSignUp ? "-100%" : "0%" }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
