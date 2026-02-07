@@ -38,17 +38,19 @@ export default function Home() {
           Customize your vibe, connect with others, and make something beautiful.
         </p>
 
+        {/* ACTION CARDS */}
         <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
           {[
             { label: "Explore", onClick: handleExplore },
             { label: "Create your first Snippix!", onClick: handleCreateSnippix },
-            { label: "Set up your profile", onClick: () => navigate("/setup-profile") },
             { label: "Chat", onClick: () => navigate("/chat") },
           ].map((card, index) => (
             <div
               key={index}
               onClick={card.onClick}
-              className="p-8 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+              className="p-8 bg-white/5 border border-white/10 rounded-2xl 
+                         hover:bg-white/10 transition-all cursor-pointer 
+                         active:scale-95"
             >
               <span className="font-medium">{card.label}</span>
             </div>
@@ -61,7 +63,6 @@ export default function Home() {
         open={searchOpen}
         onComplete={() => setShowSearchPage(true)}
       >
-        {/* Pass the close function here */}
         {showSearchPage && <SearchPage onClose={handleCloseSearch} />}
       </SearchReveal>
     </div>
