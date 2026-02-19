@@ -37,7 +37,7 @@ export default function CustomCursor() {
       transition={{
         type: "spring",
         stiffness: 150,
-        damping: 15,
+        damping: 10,
         mass: 0.3,
       }}
     />
