@@ -22,3 +22,11 @@ export default function Home() {
     </div>
   );
 }
+export default function Home({ onSearchOpen }) {
+  return (
+    <>
+      <Navbar onSearchClick={onSearchOpen} />
+      {/* rest */}
+    </>
+  );
+}

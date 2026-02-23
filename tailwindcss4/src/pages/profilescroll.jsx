@@ -227,3 +227,11 @@ export default function ProfileScroll() {
     </div>
   );
 }
+export default function Home({ onSearchOpen }) {
+  return (
+    <>
+      <Navbar onSearchClick={onSearchOpen} />
+      {/* rest */}
+    </>
+  );
+}

@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ================= PAGES ================= */
@@ -19,6 +24,7 @@ import Privacy from "./pages/Privacy.jsx";
 import Help from "./pages/Help.jsx";
 import EditProfile from "./pages/EditProfile.jsx";
 import ChangePassword from "./pages/ChangePassword.jsx";
+import Search from "./pages/search.jsx"; // ← IMPORTANT
 
 import "./App.css";
 
@@ -62,9 +68,13 @@ const PageWrapper = ({ children }) => (
   </motion.div>
 );
 
-/* ================= ROUTES WITH ANIMATION ================= */
+/* ================= ROUTES ================= */
 
-function AnimatedRoutes({ authenticated, onAuthSuccess }) {
+function AnimatedRoutes({
+  authenticated,
+  onAuthSuccess,
+  onSearchOpen,
+}) {
   const location = useLocation();
 
   return (
@@ -107,15 +117,7 @@ function AnimatedRoutes({ authenticated, onAuthSuccess }) {
               path="/"
               element={
                 <PageWrapper>
-                  <ProfileScroll />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/setup-profile"
-              element={
-                <PageWrapper>
-                  <SetupProfile />
+                  <ProfileScroll onSearchOpen={onSearchOpen} />
                 </PageWrapper>
               }
             />
@@ -123,7 +125,7 @@ function AnimatedRoutes({ authenticated, onAuthSuccess }) {
               path="/home"
               element={
                 <PageWrapper>
-                  <Home />
+                  <Home onSearchOpen={onSearchOpen} />
                 </PageWrapper>
               }
             />
@@ -132,6 +134,14 @@ function AnimatedRoutes({ authenticated, onAuthSuccess }) {
               element={
                 <PageWrapper>
                   <Settings />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/setup-profile"
+              element={
+                <PageWrapper>
+                  <SetupProfile />
                 </PageWrapper>
               }
             />
@@ -205,6 +215,9 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [reveal, setReveal] = useState(false);
 
+  // 🔥 NEW STATE FOR SEARCH
+  const [searchOpen, setSearchOpen] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
@@ -224,6 +237,13 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-black relative overflow-hidden">
 
+        {/* SEARCH OVERLAY */}
+        {searchOpen && (
+          <div className="fixed inset-0 z-[100]">
+            <Search onClose={() => setSearchOpen(false)} />
+          </div>
+        )}
+
         {/* LOGIN REVEAL ANIMATION */}
         <AnimatePresence>
           {reveal && (
@@ -241,6 +261,7 @@ export default function App() {
         <AnimatedRoutes
           authenticated={authenticated}
           onAuthSuccess={handleAuthSuccess}
+          onSearchOpen={() => setSearchOpen(true)}
         />
       </div>
     </BrowserRouter>
