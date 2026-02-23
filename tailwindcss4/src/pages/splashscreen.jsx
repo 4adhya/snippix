@@ -7,7 +7,7 @@ export default function App() {
 
   useEffect(() => {
     // Trigger fade/zoom animation at 2 seconds
-    const animateTimer = setTimeout(() => setAnimateOut(true), 3000);
+    const animateTimer = setTimeout(() => setAnimateOut(true), 2000);
     // Remove splash screen at 3 seconds
     const loadingTimer = setTimeout(() => setLoading(false), 3000);
 
