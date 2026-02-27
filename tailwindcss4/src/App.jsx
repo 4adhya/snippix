@@ -24,35 +24,25 @@ import Privacy from "./pages/Privacy.jsx";
 import Help from "./pages/Help.jsx";
 import EditProfile from "./pages/EditProfile.jsx";
 import ChangePassword from "./pages/ChangePassword.jsx";
-import Search from "./pages/search.jsx"; // ← IMPORTANT
+import Search from "./pages/search.jsx";
 
 import "./App.css";
 
 /* ================= PAGE TRANSITION ================= */
 
 const pageVariants = {
-  initial: {
-    opacity: 0,
-    y: 14,
-    filter: "blur(6px)",
-  },
+  initial: { opacity: 0, y: 14, filter: "blur(6px)" },
   animate: {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: {
-      duration: 0.35,
-      ease: "easeOut",
-    },
+    transition: { duration: 0.35, ease: "easeOut" },
   },
   exit: {
     opacity: 0,
     y: -14,
     filter: "blur(6px)",
-    transition: {
-      duration: 0.25,
-      ease: "easeIn",
-    },
+    transition: { duration: 0.25, ease: "easeIn" },
   },
 };
 
@@ -80,7 +70,7 @@ function AnimatedRoutes({
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* PUBLIC */}
+        {/* PUBLIC ROUTES */}
         <Route
           path="/terms"
           element={
@@ -98,7 +88,7 @@ function AnimatedRoutes({
           }
         />
 
-        {/* AUTH */}
+        {/* AUTH ROUTE */}
         {!authenticated && (
           <Route
             path="*"
@@ -110,17 +100,29 @@ function AnimatedRoutes({
           />
         )}
 
-        {/* PROTECTED */}
+        {/* PROTECTED ROUTES */}
         {authenticated && (
           <>
+            {/* HOME */}
             <Route
               path="/"
+              element={
+                <PageWrapper>
+                  <Home onSearchOpen={onSearchOpen} />
+                </PageWrapper>
+              }
+            />
+
+            {/* PROFILE */}
+            <Route
+              path="/profile"
               element={
                 <PageWrapper>
                   <ProfileScroll onSearchOpen={onSearchOpen} />
                 </PageWrapper>
               }
             />
+
             <Route
               path="/home"
               element={
@@ -129,6 +131,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/settings"
               element={
@@ -137,6 +140,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/setup-profile"
               element={
@@ -145,6 +149,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/edit-profile"
               element={
@@ -153,6 +158,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/change-password"
               element={
@@ -161,6 +167,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/help"
               element={
@@ -169,6 +176,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/collage"
               element={
@@ -177,6 +185,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/chat"
               element={
@@ -185,6 +194,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/chat/:uid"
               element={
@@ -193,6 +203,7 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
             <Route
               path="/notebook/:uid"
               element={
@@ -214,8 +225,6 @@ export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reveal, setReveal] = useState(false);
-
-  // 🔥 NEW STATE FOR SEARCH
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -236,7 +245,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-black relative overflow-hidden">
-
+        
         {/* SEARCH OVERLAY */}
         {searchOpen && (
           <div className="fixed inset-0 z-[100]">
