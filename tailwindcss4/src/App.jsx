@@ -12,8 +12,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ViewNotebook from "./pages/ViewNotebook.jsx";
 import AuthCard from "./components/AuthCard.jsx";
 import Home from "./pages/home.jsx";
-import Profile from "./pages/Profile.jsx"; // ✅ NEW PROFILE PAGE
-import ProfileScroll from "./pages/profilescroll.jsx"; // ✅ EXPLORE PAGE
+import Profile from "./pages/Profile.jsx"; // ✅ NEW PROFILE
+import ProfileScroll from "./pages/profilescroll.jsx"; // ✅ EXPLORE
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
 import CollageMaker from "./pages/CreateSnippix.jsx";
@@ -71,8 +71,8 @@ function AnimatedRoutes({
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        
-        {/* PUBLIC ROUTES */}
+
+        {/* PUBLIC */}
         <Route
           path="/terms"
           element={
@@ -81,7 +81,6 @@ function AnimatedRoutes({
             </PageWrapper>
           }
         />
-
         <Route
           path="/privacy"
           element={
@@ -91,7 +90,7 @@ function AnimatedRoutes({
           }
         />
 
-        {/* AUTH ROUTE */}
+        {/* AUTH */}
         {!authenticated && (
           <Route
             path="*"
@@ -103,7 +102,7 @@ function AnimatedRoutes({
           />
         )}
 
-        {/* PROTECTED ROUTES */}
+        {/* PROTECTED */}
         {authenticated && (
           <>
             {/* HOME */}
@@ -116,9 +115,19 @@ function AnimatedRoutes({
               }
             />
 
-            {/* PROFILE (MY PROFILE) */}
+            {/* MY PROFILE */}
             <Route
               path="/profile"
+              element={
+                <PageWrapper>
+                  <Profile />
+                </PageWrapper>
+              }
+            />
+
+            {/* OTHER USER PROFILE */}
+            <Route
+              path="/profile/:uid"
               element={
                 <PageWrapper>
                   <Profile />
@@ -257,7 +266,7 @@ export default function App() {
           </div>
         )}
 
-        {/* LOGIN REVEAL ANIMATION */}
+        {/* LOGIN REVEAL */}
         <AnimatePresence>
           {reveal && (
             <motion.div
@@ -270,7 +279,6 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* ROUTES */}
         <AnimatedRoutes
           authenticated={authenticated}
           onAuthSuccess={handleAuthSuccess}
