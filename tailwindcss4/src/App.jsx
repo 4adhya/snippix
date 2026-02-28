@@ -12,7 +12,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ViewNotebook from "./pages/ViewNotebook.jsx";
 import AuthCard from "./components/AuthCard.jsx";
 import Home from "./pages/home.jsx";
-import ProfileScroll from "./pages/profilescroll.jsx";
+import Profile from "./pages/Profile.jsx"; // ✅ NEW PROFILE PAGE
+import ProfileScroll from "./pages/profilescroll.jsx"; // ✅ EXPLORE PAGE
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
 import CollageMaker from "./pages/CreateSnippix.jsx";
@@ -70,6 +71,7 @@ function AnimatedRoutes({
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        
         {/* PUBLIC ROUTES */}
         <Route
           path="/terms"
@@ -79,6 +81,7 @@ function AnimatedRoutes({
             </PageWrapper>
           }
         />
+
         <Route
           path="/privacy"
           element={
@@ -113,21 +116,22 @@ function AnimatedRoutes({
               }
             />
 
-            {/* PROFILE */}
+            {/* PROFILE (MY PROFILE) */}
             <Route
               path="/profile"
               element={
                 <PageWrapper>
-                  <ProfileScroll onSearchOpen={onSearchOpen} />
+                  <Profile />
                 </PageWrapper>
               }
             />
 
+            {/* EXPLORE */}
             <Route
-              path="/home"
+              path="/explore"
               element={
                 <PageWrapper>
-                  <Home onSearchOpen={onSearchOpen} />
+                  <ProfileScroll />
                 </PageWrapper>
               }
             />
@@ -245,7 +249,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-black relative overflow-hidden">
-        
+
         {/* SEARCH OVERLAY */}
         {searchOpen && (
           <div className="fixed inset-0 z-[100]">
