@@ -4,11 +4,10 @@ import { auth } from "../firebase";
 import { db } from "../firebase";
 import {
   doc,
-  getDoc,
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot,
 } from "firebase/firestore";
 
 export default function Profile() {
@@ -16,34 +15,37 @@ export default function Profile() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
 
-      // 🔹 Fetch user data
-      const userRef = doc(db, "users", currentUser.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        setUserData(userSnap.data());
+    // 🔹 Listen to user document in real-time
+    const unsubscribeUser = onSnapshot(
+      doc(db, "users", currentUser.uid),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setUserData(docSnap.data());
+        }
       }
+    );
 
-      // 🔹 Fetch user posts
-      const q = query(
-        collection(db, "posts"),
-        where("userId", "==", currentUser.uid)
-      );
+    // 🔹 Listen to posts in real-time
+    const q = query(
+      collection(db, "posts"),
+      where("userId", "==", currentUser.uid)
+    );
 
-      const querySnapshot = await getDocs(q);
-      const userPosts = querySnapshot.docs.map((doc) => ({
+    const unsubscribePosts = onSnapshot(q, (snapshot) => {
+      const userPosts = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
       setPosts(userPosts);
-    };
+    });
 
-    fetchData();
+    return () => {
+      unsubscribeUser();
+      unsubscribePosts();
+    };
   }, []);
 
   if (!userData) return null;
@@ -53,20 +55,35 @@ export default function Profile() {
       <Navbar />
 
       <div className="pt-24 px-8 max-w-4xl mx-auto">
-
-        {/* HEADER */}
+        {/* PROFILE HEADER */}
         <div className="flex items-center gap-8 mb-10">
-          <div className="w-28 h-28 rounded-full bg-white/20" />
+          {/* Profile Picture */}
+          <div className="w-28 h-28 rounded-full bg-white/20 overflow-hidden">
+            {userData.photoURL && (
+              <img
+                src={userData.photoURL}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
 
           <div>
+            {/* 🔥 REAL NAME */}
             <h1 className="text-3xl font-bold">
-              {userData.name || "User"}
+              {userData.username ||
+                userData.name ||
+                userData.displayName ||
+                auth.currentUser.displayName ||
+                "User"}
             </h1>
 
+            {/* 🔥 REAL BIO */}
             <p className="text-white/60">
-              {userData.bio || "Creator"}
+              {userData.bio || ""}
             </p>
 
+            {/* COUNTS */}
             <div className="flex gap-6 mt-4 text-sm">
               <span>
                 <b>{posts.length}</b> Posts
