@@ -18,7 +18,7 @@ export default function Profile() {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
-    // 🔹 Listen to user document in real-time
+    // 🔹 Listen to user document
     const unsubscribeUser = onSnapshot(
       doc(db, "users", currentUser.uid),
       (docSnap) => {
@@ -28,7 +28,7 @@ export default function Profile() {
       }
     );
 
-    // 🔹 Listen to posts in real-time
+    // 🔹 Listen to user posts
     const q = query(
       collection(db, "posts"),
       where("userId", "==", currentUser.uid)
@@ -69,16 +69,15 @@ export default function Profile() {
           </div>
 
           <div>
-            {/* 🔥 REAL NAME */}
+            {/* 🔥 REAL NAME ONLY */}
             <h1 className="text-3xl font-bold">
-              {userData.username ||
-                userData.name ||
-                userData.displayName ||
+              {userData.name ||
+                userData.fullName ||
                 auth.currentUser.displayName ||
                 "User"}
             </h1>
 
-            {/* 🔥 REAL BIO */}
+            {/* BIO */}
             <p className="text-white/60">
               {userData.bio || ""}
             </p>
@@ -99,7 +98,7 @@ export default function Profile() {
             </div>
 
             <button
-              onClick={() => window.location.href="/edit-profile"}
+              onClick={() => (window.location.href = "/edit-profile")}
               className="mt-4 px-4 py-2 bg-white text-black rounded-lg"
             >
               Edit Profile
