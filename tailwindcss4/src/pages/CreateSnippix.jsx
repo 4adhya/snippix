@@ -259,7 +259,7 @@ export default function CreateSnippix() {
 
   /* ---------------- RENDER ---------------- */
   return (
-    <div className="min-h-screen bg-[#3d445e] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#2b1f1a] flex items-center justify-center p-6">
       <button
         onClick={() => navigate("/home")}
         className="fixed top-6 left-6 z-50 p-3 rounded-full bg-black/20 border border-white/10 backdrop-blur-md"
