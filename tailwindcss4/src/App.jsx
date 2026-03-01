@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -12,8 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ViewNotebook from "./pages/ViewNotebook.jsx";
 import AuthCard from "./components/AuthCard.jsx";
 import Home from "./pages/home.jsx";
-import Profile from "./pages/Profile.jsx"; // ✅ NEW PROFILE
-import ProfileScroll from "./pages/profilescroll.jsx"; // ✅ EXPLORE
+import Profile from "./pages/Profile.jsx";
+import ProfileScroll from "./pages/profilescroll.jsx";
 import SplashScreen from "./pages/splashscreen.jsx";
 import Settings from "./pages/settings.jsx";
 import CollageMaker from "./pages/CreateSnippix.jsx";
@@ -32,18 +33,18 @@ import "./App.css";
 /* ================= PAGE TRANSITION ================= */
 
 const pageVariants = {
-  initial: { opacity: 0, y: 14, filter: "blur(6px)" },
+  initial: { opacity: 0, y: 18, filter: "blur(8px)" },
   animate: {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.35, ease: "easeOut" },
+    transition: { duration: 0.4, ease: "easeOut" },
   },
   exit: {
     opacity: 0,
-    y: -14,
-    filter: "blur(6px)",
-    transition: { duration: 0.25, ease: "easeIn" },
+    y: -18,
+    filter: "blur(8px)",
+    transition: { duration: 0.3, ease: "easeIn" },
   },
 };
 
@@ -53,7 +54,7 @@ const PageWrapper = ({ children }) => (
     initial="initial"
     animate="animate"
     exit="exit"
-    className="h-full"
+    className="min-h-screen"
   >
     {children}
   </motion.div>
@@ -72,7 +73,7 @@ function AnimatedRoutes({
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
 
-        {/* PUBLIC */}
+        {/* PUBLIC ROUTES */}
         <Route
           path="/terms"
           element={
@@ -90,7 +91,7 @@ function AnimatedRoutes({
           }
         />
 
-        {/* AUTH */}
+        {/* AUTH FLOW */}
         {!authenticated && (
           <Route
             path="*"
@@ -102,10 +103,9 @@ function AnimatedRoutes({
           />
         )}
 
-        {/* PROTECTED */}
+        {/* PROTECTED ROUTES */}
         {authenticated && (
           <>
-            {/* HOME */}
             <Route
               path="/"
               element={
@@ -115,7 +115,6 @@ function AnimatedRoutes({
               }
             />
 
-            {/* MY PROFILE */}
             <Route
               path="/profile"
               element={
@@ -125,7 +124,6 @@ function AnimatedRoutes({
               }
             />
 
-            {/* OTHER USER PROFILE */}
             <Route
               path="/profile/:uid"
               element={
@@ -135,7 +133,6 @@ function AnimatedRoutes({
               }
             />
 
-            {/* EXPLORE */}
             <Route
               path="/explore"
               element={
@@ -225,6 +222,9 @@ function AnimatedRoutes({
                 </PageWrapper>
               }
             />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" />} />
           </>
         )}
       </Routes>
@@ -240,8 +240,9 @@ export default function App() {
   const [reveal, setReveal] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  /* Splash timing */
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
+    const timer = setTimeout(() => setLoading(false), 1400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -250,23 +251,30 @@ export default function App() {
     setTimeout(() => {
       setReveal(false);
       setAuthenticated(true);
-    }, 1200);
+    }, 1000);
   };
 
   if (loading) return <SplashScreen />;
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-black relative overflow-hidden">
+      <div className="min-h-screen bg-[#2b1f1a] text-white relative overflow-hidden">
 
-        {/* SEARCH OVERLAY */}
-        {searchOpen && (
-          <div className="fixed inset-0 z-[100]">
-            <Search onClose={() => setSearchOpen(false)} />
-          </div>
-        )}
+        {/* Search Overlay */}
+        <AnimatePresence>
+          {searchOpen && (
+            <motion.div
+              className="fixed inset-0 z-[100]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Search onClose={() => setSearchOpen(false)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* LOGIN REVEAL */}
+        {/* Auth Reveal Animation */}
         <AnimatePresence>
           {reveal && (
             <motion.div
