@@ -1,14 +1,15 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+// 🔥 Import your images
+import boat from "../assets/boat.jpg";
+import bird from "../assets/bird.jpg";
+import street from "../assets/street.jpg";
+
 export default function HeroFilm() {
   const navigate = useNavigate();
 
-  const images = [
-    "/images/film1.jpg",
-    "/images/film2.jpg",
-    "/images/film3.jpg",
-  ];
+  const images = [boat, bird, street];
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#2b1f1a] text-white">
@@ -30,18 +31,22 @@ export default function HeroFilm() {
         </div>
 
         {/* FILM BODY */}
-        <div className="flex justify-center gap-8 px-10 py-10 bg-black border-y border-white/10">
+        <div className="flex justify-center gap-8 px-10 py-12 bg-black border-y border-white/10">
 
           {images.map((img, index) => (
-            <motion.img
+            <motion.div
               key={index}
-              src={img}
-              alt="film"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: index * 0.2, duration: 0.6 }}
-              className="w-80 h-48 object-cover shadow-2xl"
-            />
+              className="p-2 bg-black border border-white/10"
+            >
+              <img
+                src={img}
+                alt="film"
+                className="w-80 h-56 object-cover rounded-sm shadow-2xl hover:scale-105 transition duration-500"
+              />
+            </motion.div>
           ))}
 
         </div>
@@ -95,6 +100,7 @@ export default function HeroFilm() {
           Explore Snippix
         </button>
       </div>
+
     </section>
   );
 }
