@@ -71,16 +71,16 @@ export default function HeroFilm() {
         transition={{ duration: 0.8 }}
         className="text-5xl md:text-6xl font-semibold text-center font-[Playfair_Display] tracking-wide"
       >
-        Frame Your Story.
+        Built for the main feed.
       </motion.h1>
 
       <motion.p
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.8 }}
+        animate={{ opacity: 0.85 }}
         transition={{ delay: 0.4 }}
         className="mt-5 text-lg text-gray-300 text-center max-w-xl"
       >
-        Turn everyday moments into aesthetic visual narratives.
+        Because your moments deserve the spotlight.
       </motion.p>
 
       {/* ================= BUTTONS ================= */}
