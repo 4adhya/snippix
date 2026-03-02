@@ -258,7 +258,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-[#3d445e] text-white relative overflow-hidden">
+      <div className="min-h-screen bg-[#2b1f1a] text-white relative overflow-hidden">
 
         {/* Search Overlay */}
         <AnimatePresence>
