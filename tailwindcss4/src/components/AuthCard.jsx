@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { registerUser, loginUser, db } from "../firebase";
 import {
   doc,
@@ -19,7 +19,6 @@ export default function AuthCard({ onAuthSuccess }) {
   const [usernameStatus, setUsernameStatus] = useState("idle");
   const { setUser } = useUser();
 
-  /* ================= USERNAME CHECK ================= */
   useEffect(() => {
     if (!isSignUp) return;
 
@@ -29,37 +28,20 @@ export default function AuthCard({ onAuthSuccess }) {
       return;
     }
 
-    setUsernameStatus("checking");
-
     const timeout = setTimeout(async () => {
-      try {
-        const ref = doc(db, "usernames", cleanUsername);
-        const snap = await getDoc(ref);
-        setUsernameStatus(snap.exists() ? "taken" : "available");
-      } catch {
-        setUsernameStatus("idle");
-      }
+      const ref = doc(db, "usernames", cleanUsername);
+      const snap = await getDoc(ref);
+      setUsernameStatus(snap.exists() ? "taken" : "available");
     }, 400);
 
     return () => clearTimeout(timeout);
   }, [username, isSignUp]);
 
-  /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       if (isSignUp) {
-        if (!username.trim()) {
-          alert("Username is required");
-          return;
-        }
-
-        if (usernameStatus === "taken") {
-          alert("Username already taken.");
-          return;
-        }
-
         const cleanUsername = username.trim().toLowerCase();
         const userCred = await registerUser(email, password);
         const user = userCred.user;
@@ -68,15 +50,10 @@ export default function AuthCard({ onAuthSuccess }) {
         await runTransaction(db, async (tx) => {
           const usernameRef = doc(db, "usernames", cleanUsername);
           const userRef = doc(db, "users", uid);
-
           const snap = await tx.get(usernameRef);
           if (snap.exists()) throw new Error("USERNAME_TAKEN");
 
-          tx.set(usernameRef, {
-            uid,
-            createdAt: serverTimestamp(),
-          });
-
+          tx.set(usernameRef, { uid, createdAt: serverTimestamp() });
           tx.set(userRef, {
             fullName,
             username: cleanUsername,
@@ -92,9 +69,8 @@ export default function AuthCard({ onAuthSuccess }) {
       } else {
         const cleanUsername = email.trim().toLowerCase();
         const usernameSnap = await getDoc(doc(db, "usernames", cleanUsername));
-
         if (!usernameSnap.exists()) {
-          alert("Invalid username or password");
+          alert("Invalid username");
           return;
         }
 
@@ -107,7 +83,7 @@ export default function AuthCard({ onAuthSuccess }) {
         await user.reload();
 
         if (!user.emailVerified) {
-          alert("Please verify your email.");
+          alert("Verify your email first.");
           return;
         }
 
@@ -128,20 +104,34 @@ export default function AuthCard({ onAuthSuccess }) {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-transparent">
-      <div className="relative w-[800px] h-[480px] bg-[#f8f3ed] rounded-2xl shadow-2xl overflow-hidden flex">
+      <div className="relative w-[800px] h-[480px] overflow-hidden rounded-2xl shadow-2xl bg-[#f8f3ed]">
 
-        {/* LEFT FORM SIDE */}
-        <div className="w-1/2 flex items-center justify-center p-8 z-10">
-          <AnimatePresence mode="wait">
-            {!isSignUp ? (
-              <motion.div
-                key="signin"
-                initial={{ opacity: 0, x: -40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 40 }}
-                transition={{ duration: 0.4 }}
-                className="w-full"
+        <motion.div
+          animate={{ x: isSignUp ? "-800px" : "0px" }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          className="flex w-[1600px] h-full"
+        >
+
+          {/* SIGN IN SECTION */}
+          <div className="w-[800px] flex">
+
+            {/* LEFT PANEL */}
+            <div className="w-1/2 bg-gradient-to-br from-[#2b1f1a] to-[#3e2c24] text-white flex flex-col items-center justify-center px-8 text-center">
+              <h3 className="text-3xl font-bold mb-4">New Here?</h3>
+              <p className="mb-6 text-white/80">
+                Create your account and start sharing your Snippix moments!
+              </p>
+              <button
+                onClick={() => setIsSignUp(true)}
+                className="border-2 border-[#f1e3d3] px-6 py-2 rounded-full font-semibold hover:bg-[#f1e3d3] hover:text-[#2b1f1a] transition"
               >
+                Sign Up
+              </button>
+            </div>
+
+            {/* RIGHT FORM */}
+            <div className="w-1/2 flex items-center justify-center p-8">
+              <div className="w-full">
                 <h2 className="text-3xl font-bold mb-6 text-center text-[#2b1f1a]">
                   Welcome Back
                 </h2>
@@ -152,32 +142,32 @@ export default function AuthCard({ onAuthSuccess }) {
                     placeholder="Username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#d6c5b5]"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
                   />
                   <input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#d6c5b5]"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-full bg-[#f1e3d3] text-[#2b1f1a] font-medium shadow-lg hover:scale-105 transition"
+                    className="w-full py-3 rounded-full bg-[#f1e3d3] text-[#2b1f1a] font-medium shadow-lg"
                   >
                     Sign In
                   </button>
                 </form>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="signup"
-                initial={{ opacity: 0, x: -40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 40 }}
-                transition={{ duration: 0.4 }}
-                className="w-full"
-              >
+              </div>
+            </div>
+          </div>
+
+          {/* SIGN UP SECTION */}
+          <div className="w-[800px] flex">
+
+            {/* LEFT FORM */}
+            <div className="w-1/2 flex items-center justify-center p-8">
+              <div className="w-full">
                 <h2 className="text-3xl font-bold mb-6 text-center text-[#2b1f1a]">
                   Create Account
                 </h2>
@@ -188,63 +178,55 @@ export default function AuthCard({ onAuthSuccess }) {
                     placeholder="Full Name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#d6c5b5]"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
                   />
                   <input
                     type="text"
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#d6c5b5]"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
                   />
                   <input
                     type="email"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#d6c5b5]"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
                   />
                   <input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#d6c5b5]"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
                   />
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-full bg-[#556b5d] text-white font-medium shadow-lg hover:scale-105 transition"
+                    className="w-full py-3 rounded-full bg-[#556b5d] text-white font-medium shadow-lg"
                   >
                     Sign Up
                   </button>
                 </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+            </div>
 
-        {/* RIGHT SLIDING PANEL */}
-        <motion.div
-          animate={{ x: isSignUp ? "-100%" : "0%" }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-br from-[#2b1f1a] to-[#3e2c24] text-white flex flex-col items-center justify-center px-8 text-center"
-        >
-          <h3 className="text-3xl font-bold mb-4">
-            {isSignUp ? "Welcome Back" : "New Here?"}
-          </h3>
-          <p className="mb-6 text-white/80">
-            {isSignUp
-              ? "Already have an account? Sign in and continue your journey!"
-              : "Create your account and start sharing your Snippix moments!"}
-          </p>
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="border-2 border-[#f1e3d3] px-6 py-2 rounded-full font-semibold hover:bg-[#f1e3d3] hover:text-[#2b1f1a] transition"
-          >
-            {isSignUp ? "Sign In" : "Sign Up"}
-          </button>
+            {/* RIGHT PANEL */}
+            <div className="w-1/2 bg-gradient-to-br from-[#2b1f1a] to-[#3e2c24] text-white flex flex-col items-center justify-center px-8 text-center">
+              <h3 className="text-3xl font-bold mb-4">Welcome Back</h3>
+              <p className="mb-6 text-white/80">
+                Already have an account? Sign in and continue your journey!
+              </p>
+              <button
+                onClick={() => setIsSignUp(false)}
+                className="border-2 border-[#f1e3d3] px-6 py-2 rounded-full font-semibold hover:bg-[#f1e3d3] hover:text-[#2b1f1a] transition"
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
+
         </motion.div>
-
       </div>
     </div>
   );
