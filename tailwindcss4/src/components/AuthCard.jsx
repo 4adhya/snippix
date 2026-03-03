@@ -142,14 +142,14 @@ export default function AuthCard({ onAuthSuccess }) {
                     placeholder="Username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white text-[#2b1f1a] placeholder-[#9b8b7a]"
                   />
                   <input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white text-[#2b1f1a] placeholder-[#9b8b7a]"
                   />
                   <button
                     type="submit"
@@ -178,28 +178,28 @@ export default function AuthCard({ onAuthSuccess }) {
                     placeholder="Full Name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white text-[#2b1f1a] placeholder-[#9b8b7a]"
                   />
                   <input
                     type="text"
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white text-[#2b1f1a] placeholder-[#9b8b7a]"
                   />
                   <input
                     type="email"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white text-[#2b1f1a] placeholder-[#9b8b7a]"
                   />
                   <input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white"
+                    className="w-full p-3 border border-[#d6c5b5] rounded-xl bg-white text-[#2b1f1a] placeholder-[#9b8b7a]"
                   />
                   <button
                     type="submit"
