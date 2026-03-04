@@ -122,10 +122,7 @@ export default function Profile() {
             {/* NAME */}
 
             <h1 className="text-3xl font-bold">
-              {userData.name ||
-                userData.fullName ||
-                userData.username ||
-                "User"}
+              {userData.name || userData.username || "User"}
             </h1>
 
             {/* BIO */}
@@ -137,6 +134,7 @@ export default function Profile() {
             {/* STATS */}
 
             <div className="flex gap-6 mt-4 text-sm">
+
               <span>
                 <b>{posts.length}</b> Frames
               </span>
@@ -148,6 +146,7 @@ export default function Profile() {
               <span>
                 <b>{userData.following?.length || 0}</b> Following
               </span>
+
             </div>
 
             {/* ACTION BUTTON */}
@@ -162,7 +161,7 @@ export default function Profile() {
             ) : (
               <button
                 onClick={handleFollow}
-                className={`mt-4 px-5 py-2 rounded-lg transition ${
+                className={`mt-4 px-5 py-2 rounded-lg ${
                   isFollowing
                     ? "bg-white text-black"
                     : "bg-blue-600 text-white"
@@ -171,6 +170,7 @@ export default function Profile() {
                 {isFollowing ? "Following" : "Follow"}
               </button>
             )}
+
           </div>
         </div>
 
@@ -180,78 +180,87 @@ export default function Profile() {
 
           <button
             onClick={() => setActiveTab("frames")}
-            className={`hover:text-white ${
-              activeTab === "frames" && "text-white font-semibold"
-            }`}
+            className={activeTab === "frames" ? "text-white font-semibold" : ""}
           >
             Frames
           </button>
 
           <button
             onClick={() => setActiveTab("snips")}
-            className={`hover:text-white ${
-              activeTab === "snips" && "text-white font-semibold"
-            }`}
+            className={activeTab === "snips" ? "text-white font-semibold" : ""}
           >
             Snips
           </button>
 
           <button
             onClick={() => setActiveTab("driftlist")}
-            className={`hover:text-white ${
-              activeTab === "driftlist" && "text-white font-semibold"
-            }`}
+            className={activeTab === "driftlist" ? "text-white font-semibold" : ""}
           >
             Driftlist
           </button>
 
           <button
             onClick={() => setActiveTab("tagged")}
-            className={`hover:text-white ${
-              activeTab === "tagged" && "text-white font-semibold"
-            }`}
+            className={activeTab === "tagged" ? "text-white font-semibold" : ""}
           >
             Tagged
           </button>
+
         </div>
 
-        {/* TAB CONTENT */}
+        {/* FRAMES TAB */}
 
         {activeTab === "frames" && (
           <>
             {posts.length === 0 ? (
               <p className="text-white/40">No frames yet.</p>
             ) : (
+
               <div className="grid grid-cols-3 gap-4">
+
                 {posts.map((post) => (
-                  <img
+
+                  <div
                     key={post.id}
-                    src={post.imageUrl}
-                    alt=""
-                    className="aspect-square object-cover rounded-lg hover:scale-105 transition"
-                  />
+                    className="relative group overflow-hidden rounded-lg"
+                  >
+
+                    <img
+                      src={post.imageUrl}
+                      alt=""
+                      className="aspect-square w-full object-cover transition duration-300 transform group-hover:scale-110 group-hover:brightness-75"
+                    />
+
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                      <span className="text-white text-xl">👁</span>
+                    </div>
+
+                  </div>
+
                 ))}
+
               </div>
+
             )}
           </>
         )}
 
+        {/* SNIPS TAB */}
+
         {activeTab === "snips" && (
-          <p className="text-white/40">
-            No snips yet.
-          </p>
+          <p className="text-white/40">No snips yet.</p>
         )}
+
+        {/* DRIFTLIST TAB */}
 
         {activeTab === "driftlist" && (
-          <p className="text-white/40">
-            No driftlist places yet.
-          </p>
+          <p className="text-white/40">No driftlist places yet.</p>
         )}
 
+        {/* TAGGED TAB */}
+
         {activeTab === "tagged" && (
-          <p className="text-white/40">
-            No tagged content yet.
-          </p>
+          <p className="text-white/40">No tagged posts yet.</p>
         )}
 
       </div>
