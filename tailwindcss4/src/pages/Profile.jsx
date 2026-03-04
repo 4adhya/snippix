@@ -122,9 +122,8 @@ export default function Profile() {
             {/* NAME */}
 
             <h1 className="text-3xl font-bold">
-              {userData.name || userData.username || "User"}
-            </h1>
-
+  {userData.fullName || userData.name || userData.username || "User"}
+</h1>
             {/* BIO */}
 
             <p className="text-white/60">
