@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-// 🔥 Import your images
+// Import your images
 import boat from "../assets/boat.jpg";
 import bird from "../assets/bird.jpg";
 import street from "../assets/street.jpg";
@@ -17,13 +17,15 @@ export default function HeroFilm() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#2b1f1a] text-white">
 
-      {/* Radial glow overlay */}
+      {/* RADIAL GLOW */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.06)_0%,_transparent_70%)] pointer-events-none" />
 
       {/* ================= FILM STRIP ================= */}
-      <div className="relative w-full overflow-hidden mb-20">
+
+      <div className="relative w-full overflow-hidden mb-20 bg-black">
 
         {/* TOP FILM HOLES */}
+
         <div className="absolute top-0 left-0 w-full h-5 bg-black flex justify-between px-6 z-20">
           {Array.from({ length: 28 }).map((_, i) => (
             <div
@@ -33,10 +35,13 @@ export default function HeroFilm() {
           ))}
         </div>
 
-        {/* AUTO-SCROLLING FILM BODY */}
+        {/* AUTO SCROLLING FILM */}
+
         <motion.div
-          className="flex gap-8 px-10 py-12 bg-black border-y border-white/10"
-          animate={{ x: ["0%", "-50%"] }}
+          className="flex w-max gap-8 px-10 py-12 bg-black border-y border-white/10"
+          animate={{
+            x: ["0%", "-50%"],
+          }}
           transition={{
             repeat: Infinity,
             repeatType: "loop",
@@ -59,6 +64,7 @@ export default function HeroFilm() {
         </motion.div>
 
         {/* BOTTOM FILM HOLES */}
+
         <div className="absolute bottom-0 left-0 w-full h-5 bg-black flex justify-between px-6 z-20">
           {Array.from({ length: 28 }).map((_, i) => (
             <div
@@ -67,23 +73,38 @@ export default function HeroFilm() {
             />
           ))}
         </div>
+
       </div>
 
       {/* ================= HERO TEXT ================= */}
 
       <motion.h1
-        initial={{ opacity: 0, y: 25 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+        initial={{
+          opacity: 0,
+          y: 25,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        transition={{
+          duration: 0.8,
+        }}
         className="text-5xl md:text-6xl font-semibold text-center font-[Playfair_Display] tracking-wide"
       >
         Built for the main feed.
       </motion.h1>
 
       <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.85 }}
-        transition={{ delay: 0.4 }}
+        initial={{
+          opacity: 0,
+        }}
+        animate={{
+          opacity: 0.85,
+        }}
+        transition={{
+          delay: 0.4,
+        }}
         className="mt-6 text-lg text-gray-300 text-center max-w-xl"
       >
         Because your moments deserve the spotlight.
@@ -92,6 +113,7 @@ export default function HeroFilm() {
       {/* ================= BUTTONS ================= */}
 
       <div className="flex gap-6 mt-12">
+
         <button
           onClick={() => navigate("/collage")}
           className="px-7 py-3 rounded-full bg-[#f1e3d3] text-black font-medium shadow-lg hover:scale-105 transition duration-300"
@@ -105,6 +127,7 @@ export default function HeroFilm() {
         >
           Explore Snippix
         </button>
+
       </div>
 
     </section>
