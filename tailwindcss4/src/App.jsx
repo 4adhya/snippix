@@ -73,136 +73,6 @@ const PageWrapper = ({ children }) => (
   </motion.div>
 );
 
-/* ================= FILM REEL TRANSITION ================= */
-
-function FilmTransition() {
-  return (
-    <motion.div
-      className="fixed inset-0 z-[9999] bg-black overflow-hidden"
-      initial={{
-        x: "100%",
-      }}
-      animate={{
-        x: "-100%",
-      }}
-      exit={{
-        opacity: 0,
-      }}
-      transition={{
-        x: {
-          duration: 5,
-          ease: [0.76, 0, 0.24, 1],
-        },
-        opacity: {
-          duration: 0.4,
-        },
-      }}
-    >
-      {/* TOP FILM HOLES */}
-
-      <div className="absolute top-4 left-0 w-full flex justify-around">
-        {Array.from({ length: 18 }).map((_, index) => (
-          <div
-            key={index}
-            className="w-8 h-5 rounded-sm bg-[#2b1f1a]"
-          />
-        ))}
-      </div>
-
-      {/* TOP FILM LINE */}
-
-      <div className="absolute top-16 left-0 w-full h-px bg-white/20" />
-
-      {/* CENTER SNIPPIX */}
-
-      <motion.div
-        initial={{
-          opacity: 0,
-          scale: 0.7,
-        }}
-        animate={{
-          opacity: [0, 1, 1, 1, 0],
-          scale: [0.7, 1, 1, 1.03, 1.1],
-        }}
-        transition={{
-          duration: 4.5,
-          times: [0, 0.2, 0.5, 0.8, 1],
-          ease: "easeInOut",
-        }}
-        className="absolute inset-0 flex items-center justify-center"
-      >
-        <h1 className="text-white text-6xl md:text-8xl font-semibold tracking-[0.25em]">
-          SNIPPIX
-        </h1>
-      </motion.div>
-
-      {/* FILM FLICKER */}
-
-      <motion.div
-        className="absolute inset-0 bg-white pointer-events-none"
-        animate={{
-          opacity: [
-            0,
-            0.08,
-            0,
-            0.04,
-            0,
-            0.07,
-            0,
-            0.03,
-            0,
-          ],
-        }}
-        transition={{
-          duration: 1,
-          repeat: 4,
-          ease: "linear",
-        }}
-      />
-
-      {/* FILM SCRATCHES */}
-
-      <motion.div
-        className="absolute top-0 left-[20%] w-px h-full bg-white/20"
-        animate={{
-          opacity: [0, 0.7, 0, 0.4, 0],
-          x: [0, 10, -5, 5, 0],
-        }}
-        transition={{
-          duration: 0.8,
-          repeat: 5,
-        }}
-      />
-
-      <motion.div
-        className="absolute top-0 right-[30%] w-px h-full bg-white/10"
-        animate={{
-          opacity: [0, 0.5, 0],
-        }}
-        transition={{
-          duration: 0.5,
-          repeat: 8,
-        }}
-      />
-
-      {/* BOTTOM FILM LINE */}
-
-      <div className="absolute bottom-16 left-0 w-full h-px bg-white/20" />
-
-      {/* BOTTOM FILM HOLES */}
-
-      <div className="absolute bottom-4 left-0 w-full flex justify-around">
-        {Array.from({ length: 18 }).map((_, index) => (
-          <div
-            key={index}
-            className="w-8 h-5 rounded-sm bg-[#2b1f1a]"
-          />
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
 /* ================= ROUTES ================= */
 
 function AnimatedRoutes({
@@ -215,7 +85,6 @@ function AnimatedRoutes({
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-
         {/* PUBLIC ROUTES */}
 
         <Route
@@ -382,31 +251,20 @@ function AnimatedRoutes({
 
 export default function App() {
   const [loading, setLoading] = useState(true);
-  const [filmTransition, setFilmTransition] = useState(false);
 
   const [authenticated, setAuthenticated] = useState(false);
   const [reveal, setReveal] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  /* ================= SPLASH → FILM → LOGIN ================= */
+  /* ================= SPLASH → LOGIN ================= */
 
   useEffect(() => {
-    const filmTimer = setTimeout(() => {
-      setFilmTransition(true);
-    }, 1400);
-
-    const loginTimer = setTimeout(() => {
+    const splashTimer = setTimeout(() => {
       setLoading(false);
-    }, 3900);
-
-    const transitionTimer = setTimeout(() => {
-      setFilmTransition(false);
-    }, 6400);
+    }, 1200);
 
     return () => {
-      clearTimeout(filmTimer);
-      clearTimeout(loginTimer);
-      clearTimeout(transitionTimer);
+      clearTimeout(splashTimer);
     };
   }, []);
 
@@ -424,10 +282,31 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-[#2b1f1a] text-white relative overflow-hidden">
-
         {/* SPLASH */}
 
-        {loading && <SplashScreen />}
+        <AnimatePresence mode="wait">
+          {loading && (
+            <motion.div
+              key="splash-screen"
+              className="fixed inset-0 z-[9999] bg-[#2b1f1a]"
+              initial={{
+                opacity: 1,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              exit={{
+                opacity: 0,
+              }}
+              transition={{
+                duration: 0.25,
+                ease: "easeOut",
+              }}
+            >
+              <SplashScreen />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* MAIN APP */}
 
@@ -438,12 +317,6 @@ export default function App() {
             onSearchOpen={() => setSearchOpen(true)}
           />
         )}
-
-        {/* FILM REEL TRANSITION */}
-
-        <AnimatePresence>
-          {filmTransition && <FilmTransition />}
-        </AnimatePresence>
 
         {/* SEARCH OVERLAY */}
 
@@ -465,7 +338,7 @@ export default function App() {
         <AnimatePresence>
           {reveal && (
             <motion.div
-              className="fixed inset-0 bg-white z-50 origin-top"
+              className="fixed inset-0 bg-[#2b1f1a] z-50 origin-top"
               initial={{
                 scaleY: 0,
               }}
@@ -482,7 +355,6 @@ export default function App() {
             />
           )}
         </AnimatePresence>
-
       </div>
     </BrowserRouter>
   );
