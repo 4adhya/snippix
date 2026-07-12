@@ -61,6 +61,8 @@ const pageVariants = {
   },
 };
 
+/* ================= PAGE WRAPPER ================= */
+
 const PageWrapper = ({ children }) => (
   <motion.div
     variants={pageVariants}
@@ -239,7 +241,10 @@ function AnimatedRoutes({
               }
             />
 
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route
+              path="*"
+              element={<Navigate to="/" replace />}
+            />
           </>
         )}
       </Routes>
@@ -250,18 +255,20 @@ function AnimatedRoutes({
 /* ================= MAIN APP ================= */
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
 
   const [authenticated, setAuthenticated] = useState(false);
+
   const [reveal, setReveal] = useState(false);
+
   const [searchOpen, setSearchOpen] = useState(false);
 
-  /* ================= SPLASH → LOGIN ================= */
+  /* ================= SPLASH TIMER ================= */
 
   useEffect(() => {
     const splashTimer = setTimeout(() => {
-      setLoading(false);
-    }, 1200);
+      setShowSplash(false);
+    }, 1400);
 
     return () => {
       clearTimeout(splashTimer);
@@ -274,23 +281,81 @@ export default function App() {
     setReveal(true);
 
     setTimeout(() => {
-      setReveal(false);
       setAuthenticated(true);
-    }, 1000);
+    }, 450);
+
+    setTimeout(() => {
+      setReveal(false);
+    }, 950);
   };
+
+  /* ================= APP ================= */
 
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-[#2b1f1a] text-white relative overflow-hidden">
-        {/* SPLASH */}
 
-        <AnimatePresence mode="wait">
-          {loading && (
+        {/* ================= MAIN APP ================= */}
+
+        <AnimatedRoutes
+          authenticated={authenticated}
+          onAuthSuccess={handleAuthSuccess}
+          onSearchOpen={() => setSearchOpen(true)}
+        />
+
+        {/* ================= ORIGINAL SPLASH / CAMERA ================= */}
+
+        <AnimatePresence>
+          {showSplash && (
             <motion.div
-              key="splash-screen"
-              className="fixed inset-0 z-[9999] bg-[#2b1f1a]"
+              key="snippix-splash"
+              className="fixed inset-0 z-[9999] bg-[#2b1f1a] overflow-hidden"
               initial={{
+                clipPath: "circle(150% at 50% 50%)",
                 opacity: 1,
+              }}
+              animate={{
+                clipPath: "circle(150% at 50% 50%)",
+                opacity: 1,
+              }}
+              exit={{
+                clipPath: "circle(0% at 50% 50%)",
+              }}
+              transition={{
+                duration: 0.75,
+                ease: [0.76, 0, 0.24, 1],
+              }}
+            >
+              <SplashScreen />
+
+              {/* CAMERA FLASH */}
+
+              <motion.div
+                className="absolute inset-0 bg-white pointer-events-none"
+                initial={{
+                  opacity: 0,
+                }}
+                animate={{
+                  opacity: [0, 0, 0.18, 0],
+                }}
+                transition={{
+                  duration: 1.4,
+                  times: [0, 0.7, 0.82, 1],
+                  ease: "easeInOut",
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ================= SEARCH OVERLAY ================= */}
+
+        <AnimatePresence>
+          {searchOpen && (
+            <motion.div
+              className="fixed inset-0 z-[100]"
+              initial={{
+                opacity: 0,
               }}
               animate={{
                 opacity: 1,
@@ -300,57 +365,33 @@ export default function App() {
               }}
               transition={{
                 duration: 0.25,
-                ease: "easeOut",
               }}
             >
-              <SplashScreen />
+              <Search
+                onClose={() => setSearchOpen(false)}
+              />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* MAIN APP */}
-
-        {!loading && (
-          <AnimatedRoutes
-            authenticated={authenticated}
-            onAuthSuccess={handleAuthSuccess}
-            onSearchOpen={() => setSearchOpen(true)}
-          />
-        )}
-
-        {/* SEARCH OVERLAY */}
-
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              className="fixed inset-0 z-[100]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Search onClose={() => setSearchOpen(false)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* AUTH REVEAL */}
+        {/* ================= AUTH REVEAL ================= */}
 
         <AnimatePresence>
           {reveal && (
             <motion.div
-              className="fixed inset-0 bg-[#2b1f1a] z-50 origin-top"
+              className="fixed inset-0 bg-[#2b1f1a] z-50 pointer-events-none"
               initial={{
-                scaleY: 0,
+                clipPath: "circle(0% at 50% 50%)",
               }}
               animate={{
-                scaleY: 1,
+                clipPath: "circle(150% at 50% 50%)",
               }}
               exit={{
-                scaleY: 0,
+                opacity: 0,
               }}
               transition={{
-                duration: 0.8,
-                ease: "easeInOut",
+                duration: 0.65,
+                ease: [0.76, 0, 0.24, 1],
               }}
             />
           )}
